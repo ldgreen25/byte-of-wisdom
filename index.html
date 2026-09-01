@@ -1,65 +1,254 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rental Assistant | Desirable Management</title>
-<style>
-:root{--ink:#202722;--green:#294c3a;--green2:#1f3b2d;--cream:#f7f4ed;--gold:#b99a62;--line:#e7e2d8;--muted:#6c746e}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--cream);color:var(--ink);min-height:100vh}
-.hero{max-width:880px;margin:0 auto;padding:70px 24px;text-align:center}.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
-.hero h1{font-family:Georgia,serif;font-size:42px;margin:10px 0 14px}.hero p{max-width:620px;margin:auto;color:var(--muted);line-height:1.6}
-.launch{position:fixed;right:22px;bottom:22px;border:0;border-radius:999px;padding:15px 19px;background:var(--green);color:white;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 14px 36px #0003}
-.panel{position:fixed;right:22px;bottom:82px;width:min(400px,calc(100vw - 28px));height:min(625px,calc(100vh - 110px));background:#fff;border-radius:20px;box-shadow:0 20px 55px #0003;display:none;flex-direction:column;overflow:hidden;border:1px solid #ffffff66}
-.panel.open{display:flex}.head{background:var(--green);color:white;padding:20px 18px;display:flex;justify-content:space-between;align-items:start}
-.head h2{font-family:Georgia,serif;margin:0 0 5px;font-size:20px}.head p{margin:0;font-size:12px;opacity:.85}.close{border:0;background:none;color:white;font-size:25px;cursor:pointer}
-.messages{flex:1;overflow:auto;padding:15px;background:#faf9f6}.msg{max-width:86%;padding:11px 13px;border-radius:14px;margin:8px 0;font-size:14px;line-height:1.45}
-.bot{background:white;border:1px solid var(--line);border-bottom-left-radius:5px}.user{background:var(--green);color:white;margin-left:auto;border-bottom-right-radius:5px}
-.popular{padding:10px 13px;background:#faf9f6;border-top:1px solid var(--line)}.popular strong{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 3px 7px}
-.chip{border:1px solid var(--line);background:white;color:var(--green2);border-radius:999px;padding:8px 10px;margin:3px;font-size:12px;cursor:pointer}.chip:hover{border-color:var(--gold)}
-form{display:flex;gap:8px;padding:12px;background:white;border-top:1px solid var(--line)}input{flex:1;border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:14px;outline:none}input:focus{border-color:var(--green)}
-.send{border:0;border-radius:11px;background:var(--green);color:white;padding:0 15px;font-weight:700;cursor:pointer}.fine{text-align:center;padding:0 12px 11px;color:#8a908c;font-size:10px;background:white}
-@media(max-width:520px){.panel{right:8px;left:8px;bottom:76px;width:auto;height:calc(100vh - 90px)}.launch{right:13px;bottom:13px}.hero h1{font-size:34px}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Byte of Wisdom | Simple Technology. Smarter Business.</title>
+  <meta name="description" content="Custom digital solutions for small businesses — customer assistants, workflow apps, and business automation.">
+  <style>
+    :root{
+      --bg:#f7f8fb;
+      --text:#172033;
+      --muted:#5b6475;
+      --panel:#ffffff;
+      --line:#e5e8ef;
+      --accent:#4969e1;
+      --accent-dark:#3552c8;
+      --soft:#eef2ff;
+      --shadow:0 16px 40px rgba(23,32,51,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      color:var(--text);
+      background:var(--bg);
+      line-height:1.55;
+    }
+    .wrap{width:min(1120px,92%);margin:auto}
+    header{
+      position:sticky;top:0;z-index:20;
+      background:rgba(247,248,251,.92);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid rgba(229,232,239,.8);
+    }
+    nav{
+      min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px;
+    }
+    .brand{font-family:Georgia,"Times New Roman",serif;font-size:1.35rem;font-weight:700;letter-spacing:.2px}
+    .navlinks{display:flex;align-items:center;gap:24px}
+    .navlinks a{color:var(--text);text-decoration:none;font-size:.95rem}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:13px 18px;border-radius:12px;text-decoration:none;font-weight:700;
+      background:var(--accent);color:white;border:0;cursor:pointer;
+    }
+    .btn:hover{background:var(--accent-dark)}
+    .btn.secondary{background:white;color:var(--text);border:1px solid var(--line)}
+    .hero{padding:92px 0 70px}
+    .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:54px;align-items:center}
+    .eyebrow{
+      display:inline-block;padding:7px 10px;border-radius:999px;background:var(--soft);
+      color:var(--accent-dark);font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase
+    }
+    h1,h2,h3{font-family:Georgia,"Times New Roman",serif;line-height:1.08;margin:0 0 18px}
+    h1{font-size:clamp(3rem,7vw,5.7rem);letter-spacing:-.04em}
+    h2{font-size:clamp(2.1rem,4vw,3.4rem);letter-spacing:-.025em}
+    h3{font-size:1.45rem}
+    .hero p{font-size:1.18rem;color:var(--muted);max-width:650px;margin:0 0 30px}
+    .cta-row{display:flex;flex-wrap:wrap;gap:12px}
+    .hero-card{
+      background:linear-gradient(160deg,#ffffff 0%,#f3f5ff 100%);
+      border:1px solid var(--line);border-radius:30px;padding:28px;box-shadow:var(--shadow)
+    }
+    .mock{
+      background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;
+      box-shadow:0 10px 22px rgba(23,32,51,.06)
+    }
+    .mock-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .dot{width:10px;height:10px;border-radius:50%;display:inline-block;background:#aeb6c7;margin-right:5px}
+    .bubble{padding:13px 15px;border-radius:14px;margin:10px 0;max-width:88%;font-size:.92rem}
+    .bubble.user{margin-left:auto;background:var(--accent);color:white}
+    .bubble.bot{background:#f1f3f7;color:var(--text)}
+    section{padding:78px 0}
+    .section-head{max-width:720px;margin-bottom:34px}
+    .section-head p,.card p,.product p,.contact p{color:var(--muted)}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+    .card{
+      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+      padding:26px;box-shadow:0 10px 26px rgba(23,32,51,.04)
+    }
+    .num{font-size:.8rem;font-weight:700;color:var(--accent-dark);letter-spacing:.08em;margin-bottom:16px}
+    .product{
+      display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center;
+      background:#182136;color:white;padding:38px;border-radius:30px
+    }
+    .product p{color:#c7cfdd}
+    .product .btn.secondary{border-color:transparent}
+    .feature-list{display:grid;gap:12px;margin-top:18px}
+    .feature{display:flex;gap:10px;align-items:flex-start;color:#e9edf6}
+    .check{
+      flex:0 0 22px;height:22px;border-radius:50%;display:grid;place-items:center;
+      background:rgba(255,255,255,.12);font-size:.75rem
+    }
+    .process{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+    .step{padding:20px;border-top:3px solid var(--accent);background:white;border-radius:0 0 16px 16px}
+    .step strong{display:block;margin-bottom:7px}
+    .contact{
+      background:white;border:1px solid var(--line);border-radius:30px;padding:42px;
+      display:grid;grid-template-columns:1fr .85fr;gap:36px;align-items:center
+    }
+    .contact-box{background:var(--soft);padding:24px;border-radius:18px}
+    .contact-box a{color:var(--accent-dark);text-decoration:none;font-weight:700}
+    footer{padding:36px 0 46px;color:var(--muted);font-size:.9rem}
+    @media (max-width:860px){
+      .hero-grid,.product,.contact{grid-template-columns:1fr}
+      .grid3{grid-template-columns:1fr}
+      .process{grid-template-columns:1fr 1fr}
+      .navlinks a:not(.btn){display:none}
+      .hero{padding-top:58px}
+    }
+    @media (max-width:560px){
+      .process{grid-template-columns:1fr}
+      .contact{padding:26px}
+      .product{padding:26px}
+      .hero-card{padding:18px}
+      .btn{width:100%}
+      .cta-row{width:100%}
+    }
+  </style>
 </head>
 <body>
-<main class="hero">
-<div class="eyebrow">Desirable Management</div>
-<h1>Find your answer faster.</h1>
-<p>Use the rental assistant for common questions about applications, qualifications, pets, showings and available rentals.</p>
+<header>
+  <div class="wrap">
+    <nav>
+      <div class="brand">Byte of Wisdom</div>
+      <div class="navlinks">
+        <a href="#solutions">Solutions</a>
+        <a href="#product">Featured Product</a>
+        <a href="#process">How We Work</a>
+        <a class="btn" href="mailto:latrice@byteofwisdom.com">Start a Conversation</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">Built for small business</span>
+        <h1>Simple technology.<br>Smarter business.</h1>
+        <p>Byte of Wisdom creates practical digital solutions that help small businesses answer customers faster, organize work better, and automate repetitive tasks.</p>
+        <div class="cta-row">
+          <a class="btn" href="#product">See Our Featured Product</a>
+          <a class="btn secondary" href="mailto:latrice@byteofwisdom.com">Talk About Your Business</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="mock">
+          <div class="mock-top">
+            <strong>Customer Q&A Assistant</strong>
+            <span><i class="dot"></i><i class="dot"></i><i class="dot"></i></span>
+          </div>
+          <div class="bubble bot">Hi! What can I help you find today?</div>
+          <div class="bubble user">What do I need to apply?</div>
+          <div class="bubble bot">I can walk you through the business's approved application requirements and next steps.</div>
+          <div class="bubble user">Do you allow pets?</div>
+          <div class="bubble bot">Yes — I can share the current pet policy and direct you to the right page.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="solutions">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">What we build</span>
+        <h2>Technology that solves a real business problem.</h2>
+        <p>We focus on useful, affordable systems instead of unnecessary complexity.</p>
+      </div>
+      <div class="grid3">
+        <div class="card">
+          <div class="num">01</div>
+          <h3>Customer Assistants</h3>
+          <p>Branded website assistants that answer common customer questions using information approved by your business.</p>
+        </div>
+        <div class="card">
+          <div class="num">02</div>
+          <h3>Custom Business Apps</h3>
+          <p>Simple tools for jobs, customers, invoices, payments, records, and other everyday workflows.</p>
+        </div>
+        <div class="card">
+          <div class="num">03</div>
+          <h3>Workflow Automation</h3>
+          <p>Reduce repetitive manual work by connecting the steps your business already performs every day.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="product">
+    <div class="wrap">
+      <div class="product">
+        <div>
+          <span class="eyebrow">Featured product</span>
+          <h2>Customer Q&A Assistant</h2>
+          <p>Give customers a faster way to get answers without making them search through your website or call for every routine question.</p>
+          <div class="feature-list">
+            <div class="feature"><span class="check">✓</span><span>Custom branded for your business</span></div>
+            <div class="feature"><span class="check">✓</span><span>Uses your approved questions and answers</span></div>
+            <div class="feature"><span class="check">✓</span><span>Mobile-friendly and website-ready</span></div>
+            <div class="feature"><span class="check">✓</span><span>Built to reduce repetitive customer inquiries</span></div>
+          </div>
+        </div>
+        <div class="card" style="color:#172033">
+          <h3>See a working example</h3>
+          <p>Our current rental-assistant demonstration shows how the same core product can be customized for a specific industry and business.</p>
+          <a class="btn" href="https://ldgreen25.github.io/rental-qa-assistant/" target="_blank" rel="noopener">Open Live Demo</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="process">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Our approach</span>
+        <h2>From business problem to working solution.</h2>
+      </div>
+      <div class="process">
+        <div class="step"><strong>Discover</strong><span>Understand the problem.</span></div>
+        <div class="step"><strong>Build</strong><span>Create the solution.</span></div>
+        <div class="step"><strong>Prove</strong><span>Test it in real use.</span></div>
+        <div class="step"><strong>Demonstrate</strong><span>Show the result.</span></div>
+        <div class="step"><strong>Pilot & Scale</strong><span>Launch, learn, expand.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="contact">
+        <div>
+          <span class="eyebrow">Have a repetitive business problem?</span>
+          <h2>There may be a simpler way to handle it.</h2>
+          <p>Tell us what your team or customers repeatedly have to do. We’ll look for a practical way to simplify it.</p>
+        </div>
+        <div class="contact-box">
+          <strong>Start a conversation</strong>
+          <p>Email Byte of Wisdom to discuss your business and what you want to improve.</p>
+          <a href="mailto:latrice@byteofwisdom.com">latrice@byteofwisdom.com →</a>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 
-<button class="launch" id="launch">💬 Ask About Renting</button>
-
-<section class="panel" id="panel">
-<div class="head"><div><h2>Ask Desirable</h2><p>Rental Information Assistant</p></div><button class="close" id="close">×</button></div>
-<div class="messages" id="messages"></div>
-<div class="popular"><strong>Common questions</strong><div id="chips"></div></div>
-<form id="form"><input id="input" placeholder="Ask a rental question..." autocomplete="off"><button class="send">Send</button></form>
-<div class="fine">Answers are informational and do not constitute rental approval.</div>
-</section>
-
-<script>
-const data=[
-{label:"Application fee",keys:["application fee","fee to apply","cost to apply"],answer:"The current application fee is being confirmed by Desirable Management. This answer will be updated with the approved amount before launch."},
-{label:"Income requirements",keys:["income","salary","earn","income requirement"],answer:"The current income qualification requirement is being confirmed by Desirable Management."},
-{label:"Credit requirements",keys:["credit","credit score","fico"],answer:"The current credit requirements are being confirmed by Desirable Management."},
-{label:"Pet policy",keys:["pet","pets","dog","cat","animal"],answer:"Pet policies may vary by property. The approved pet policy, fees and restrictions will be added here before launch."},
-{label:"Housing vouchers",keys:["section 8","voucher","housing assistance","housing choice"],answer:"Desirable Management is confirming its current policy regarding housing vouchers and rental assistance."},
-{label:"Schedule a showing",keys:["showing","tour","view property","see property"],answer:"Showing instructions will be linked here so prospective tenants can quickly take the next step."},
-{label:"Available rentals",keys:["available","availability","vacancy","vacancies","homes for rent","rentals"],answer:"A direct link to Desirable Management's current available rentals will be added here."},
-{label:"Documents needed",keys:["documents","pay stubs","proof of income","identification","what do i need"],answer:"The approved list of application documents is being confirmed and will be added before launch."},
-{label:"Deposit / move-in costs",keys:["deposit","security deposit","move in","move-in","holding fee"],answer:"Deposit and move-in requirements are being confirmed and may vary by property."}
-];
-const popular=["Application fee","Income requirements","Credit requirements","Pet policy","Schedule a showing","Available rentals"];
-const panel=document.getElementById("panel"),messages=document.getElementById("messages"),inp=document.getElementById("input");
-function add(t,c){let d=document.createElement("div");d.className="msg "+c;d.textContent=t;messages.appendChild(d);messages.scrollTop=messages.scrollHeight}
-function findAnswer(q){q=q.toLowerCase();let best=null,score=0;for(const x of data){let s=0;for(const k of x.keys){if(q.includes(k))s+=3;else for(const w of k.split(" "))if(w.length>3&&q.includes(w))s++}if(s>score){score=s;best=x}}return best&&score>=2?best.answer:"I don't have an approved answer for that yet. Please contact Desirable Management directly so you receive the correct information."}
-function ask(q){add(q,"user");setTimeout(()=>add(findAnswer(q),"bot"),140)}
-document.getElementById("launch").onclick=()=>{panel.classList.add("open");if(!messages.children.length)add("Hi! I’m the Desirable Management rental assistant. I can help with common questions about renting. What would you like to know?","bot");setTimeout(()=>inp.focus(),100)}
-document.getElementById("close").onclick=()=>panel.classList.remove("open");
-document.getElementById("form").onsubmit=e=>{e.preventDefault();let q=inp.value.trim();if(q){inp.value="";ask(q)}}
-for(const name of popular){let b=document.createElement("button");b.className="chip";b.textContent=name;b.onclick=()=>ask(name);document.getElementById("chips").appendChild(b)}
-</script>
+<footer>
+  <div class="wrap">© 2026 Byte of Wisdom. All rights reserved.</div>
+</footer>
 </body>
 </html>
