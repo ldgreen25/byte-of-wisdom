@@ -7,14 +7,14 @@
   <meta name="description" content="Custom digital solutions for small businesses — customer assistants, workflow apps, and business automation.">
   <style>
     :root{
-      --bg:#f7f8fb;
-      --text:#172033;
-      --muted:#5b6475;
+      --bg:#f8f7f3;
+      --text:#172a3a;
+      --muted:#5f6870;
       --panel:#ffffff;
-      --line:#e5e8ef;
-      --accent:#4969e1;
-      --accent-dark:#3552c8;
-      --soft:#eef2ff;
+      --line:#e4dfd5;
+      --accent:#b4975a;
+      --accent-dark:#8f743f;
+      --soft:#f2eee5;
       --shadow:0 16px 40px rgba(23,32,51,.08);
       --radius:22px;
     }
@@ -30,22 +30,22 @@
     .wrap{width:min(1120px,92%);margin:auto}
     header{
       position:sticky;top:0;z-index:20;
-      background:rgba(247,248,251,.92);
+      background:rgba(248,247,243,.94);
       backdrop-filter:blur(10px);
       border-bottom:1px solid rgba(229,232,239,.8);
     }
     nav{
-      min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px;
+      min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:20px;
     }
-    .brand{font-family:Georgia,"Times New Roman",serif;font-size:1.35rem;font-weight:700;letter-spacing:.2px}
+    .brand{font-family:Georgia,"Times New Roman",serif;font-size:1.42rem;font-weight:700;letter-spacing:.15px;color:var(--text)}
     .navlinks{display:flex;align-items:center;gap:24px}
-    .navlinks a{color:var(--text);text-decoration:none;font-size:.95rem}
+    .navlinks a{color:var(--text);text-decoration:none;font-size:.92rem}.navlinks>a:not(.btn):hover{color:var(--accent-dark)}
     .btn{
       display:inline-flex;align-items:center;justify-content:center;
-      padding:13px 18px;border-radius:12px;text-decoration:none;font-weight:700;
-      background:var(--accent);color:white;border:0;cursor:pointer;
+      padding:11px 17px;border-radius:999px;text-decoration:none;font-weight:700;
+      background:var(--text);color:white;border:1px solid var(--text);cursor:pointer;
     }
-    .btn:hover{background:var(--accent-dark)}
+    .btn:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
     .btn.secondary{background:white;color:var(--text);border:1px solid var(--line)}
     .hero{padding:92px 0 70px}
     .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:54px;align-items:center}
