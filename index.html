@@ -5,116 +5,146 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Byte of Wisdom | Simple Technology. Smarter Business.</title>
   <meta name="description" content="Custom digital solutions for small businesses — customer assistants, workflow apps, and business automation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#f8f7f3;
-      --text:#172a3a;
-      --muted:#5f6870;
-      --panel:#ffffff;
-      --line:#e4dfd5;
-      --accent:#b4975a;
-      --accent-dark:#8f743f;
-      --soft:#f2eee5;
-      --shadow:0 16px 40px rgba(23,32,51,.08);
-      --radius:22px;
+      --bg:#ffffff;
+      --band:#f4f6f9;
+      --text:#13233a;
+      --muted:#55606e;
+      --line:#dde2ea;
+      --navy:#13233a;
+      --navy-2:#1d3352;
+      --accent:#9a7b3f;
+      --accent-dark:#7a6030;
+      --radius:8px;
     }
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
+    @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
     body{
       margin:0;
-      font-family:Arial,Helvetica,sans-serif;
+      font-family:"Public Sans",Arial,Helvetica,sans-serif;
       color:var(--text);
       background:var(--bg);
-      line-height:1.55;
+      line-height:1.6;
+      font-size:1.0625rem;
     }
+    a:focus-visible,.btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
     .wrap{width:min(1120px,92%);margin:auto}
+
+    /* Header */
     header{
       position:sticky;top:0;z-index:20;
-      background:rgba(248,247,243,.94);
-      backdrop-filter:blur(10px);
-      border-bottom:1px solid rgba(229,232,239,.8);
+      background:rgba(255,255,255,.96);
+      border-bottom:1px solid var(--line);
     }
-    nav{
-      min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:20px;
-    }
-    .brand{font-family:Georgia,"Times New Roman",serif;font-size:1.42rem;font-weight:700;letter-spacing:.15px;color:var(--text)}
-    .navlinks{display:flex;align-items:center;gap:24px}
-    .navlinks a{color:var(--text);text-decoration:none;font-size:.92rem}.navlinks a.btn{color:#fff}.navlinks>a:not(.btn):hover{color:var(--accent-dark)}
+    nav{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{font-size:1.2rem;font-weight:700;letter-spacing:-.01em;color:var(--text);text-decoration:none}
+    .brand span{color:var(--accent)}
+    .navlinks{display:flex;align-items:center;gap:28px}
+    .navlinks a{color:var(--text);text-decoration:none;font-size:.95rem;font-weight:500}
+    .navlinks>a:not(.btn):hover{color:var(--accent-dark)}
+    .navlinks a.btn{color:#fff}
+
     .btn{
       display:inline-flex;align-items:center;justify-content:center;
-      padding:11px 17px;border-radius:999px;text-decoration:none;font-weight:700;
-      background:var(--text);color:white;border:1px solid var(--text);cursor:pointer;
+      padding:11px 20px;border-radius:var(--radius);text-decoration:none;font-weight:600;font-size:.98rem;
+      background:var(--navy);color:#fff;border:1px solid var(--navy);cursor:pointer;
     }
-    .btn:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
-    .btn.secondary{background:white;color:var(--text);border:1px solid var(--line)}
-    .hero{padding:92px 0 70px}
-    .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:54px;align-items:center}
-    .eyebrow{
-      display:inline-block;padding:7px 10px;border-radius:999px;background:var(--soft);
-      color:var(--accent-dark);font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase
-    }
-    h1,h2,h3{font-family:Georgia,"Times New Roman",serif;line-height:1.08;margin:0 0 18px}
-    h1{font-size:clamp(3rem,7vw,5.7rem);letter-spacing:-.04em}
-    h2{font-size:clamp(2.1rem,4vw,3.4rem);letter-spacing:-.025em}
-    h3{font-size:1.45rem}
-    .hero p{font-size:1.18rem;color:var(--muted);max-width:650px;margin:0 0 30px}
+    .btn:hover{background:var(--navy-2);border-color:var(--navy-2)}
+    .btn.secondary{background:#fff;color:var(--text);border:1px solid #b9c1cc}
+    .btn.secondary:hover{border-color:var(--text)}
+
+    h1,h2,h3{line-height:1.15;margin:0 0 16px;font-weight:700}
+    h1{font-size:clamp(2.5rem,5.4vw,4rem);letter-spacing:-.03em}
+    h2{font-size:clamp(1.8rem,3.2vw,2.5rem);letter-spacing:-.02em}
+    h3{font-size:1.2rem;letter-spacing:-.005em}
+
+    .label{display:block;font-size:.95rem;font-weight:600;color:var(--accent-dark);margin-bottom:12px}
+
+    /* Hero */
+    .hero{padding:88px 0 80px}
+    .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:64px;align-items:center}
+    .hero p{font-size:1.2rem;color:var(--muted);max-width:600px;margin:0 0 32px}
     .cta-row{display:flex;flex-wrap:wrap;gap:12px}
-    .hero-card{
-      background:linear-gradient(160deg,#ffffff 0%,#f3f5ff 100%);
-      border:1px solid var(--line);border-radius:30px;padding:28px;box-shadow:var(--shadow)
-    }
+
     .mock{
-      background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;
-      box-shadow:0 10px 22px rgba(23,32,51,.06)
+      background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+      box-shadow:0 1px 2px rgba(19,35,58,.06),0 12px 32px rgba(19,35,58,.08);
+      overflow:hidden
     }
-    .mock-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-    .dot{width:10px;height:10px;border-radius:50%;display:inline-block;background:#aeb6c7;margin-right:5px}
-    .bubble{padding:13px 15px;border-radius:14px;margin:10px 0;max-width:88%;font-size:.92rem}
-    .bubble.user{margin-left:auto;background:var(--accent);color:white}
-    .bubble.bot{background:#f1f3f7;color:var(--text)}
-    section{padding:78px 0}
-    .section-head{max-width:720px;margin-bottom:34px}
-    .section-head p,.card p,.product p,.contact p{color:var(--muted)}
-    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-    .card{
-      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-      padding:26px;box-shadow:0 10px 26px rgba(23,32,51,.04)
+    .mock-top{
+      display:flex;align-items:center;gap:10px;padding:14px 18px;
+      background:var(--navy);color:#fff;font-weight:600;font-size:.95rem
     }
-    .num{font-size:.8rem;font-weight:700;color:var(--accent-dark);letter-spacing:.08em;margin-bottom:16px}
+    .mock-top .status{width:8px;height:8px;border-radius:50%;background:#5fc28a}
+    .mock-body{padding:18px}
+    .bubble{padding:11px 14px;border-radius:6px;margin:8px 0;max-width:86%;font-size:.94rem;line-height:1.5}
+    .bubble.user{margin-left:auto;background:var(--navy-2);color:#fff}
+    .bubble.bot{background:var(--band);color:var(--text)}
+
+    section{padding:88px 0}
+    .section-head{max-width:700px;margin-bottom:44px}
+    .section-head p,.service p,.contact p{color:var(--muted)}
+
+    /* Solutions */
+    #solutions{background:var(--band);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+    .service{border-top:2px solid var(--navy);padding-top:22px}
+    .service p{margin:0}
+
+    /* Product */
     .product{
-      display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center;
-      background:#182136;color:white;padding:38px;border-radius:30px
+      display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;
+      background:var(--navy);color:#fff;padding:48px;border-radius:var(--radius)
     }
-    .product p{color:#c7cfdd}
-    .product .btn.secondary{border-color:transparent}
-    .feature-list{display:grid;gap:12px;margin-top:18px}
-    .feature{display:flex;gap:10px;align-items:flex-start;color:#e9edf6}
-    .check{
-      flex:0 0 22px;height:22px;border-radius:50%;display:grid;place-items:center;
-      background:rgba(255,255,255,.12);font-size:.75rem
+    .product .label{color:#d2b97f}
+    .product p{color:#c4ccd8}
+    .feature-list{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:12px}
+    .feature-list li{padding-left:22px;position:relative;color:#e6eaf1}
+    .feature-list li::before{content:"";position:absolute;left:0;top:.62em;width:10px;height:2px;background:#d2b97f}
+    .demo{background:#fff;color:var(--text);border-radius:var(--radius);padding:30px}
+    .demo p{color:var(--muted);margin:0 0 22px}
+
+    /* Process */
+    .process{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:0;counter-reset:step}
+    .step{counter-increment:step;padding:0 20px 0 0;border-top:2px solid var(--line);position:relative;padding-top:30px}
+    .step::before{
+      content:counter(step);position:absolute;top:-15px;left:0;
+      width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;
+      font-size:.85rem;font-weight:700;display:grid;place-items:center
     }
-    .process{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-    .step{padding:20px;border-top:3px solid var(--accent);background:white;border-radius:0 0 16px 16px}
-    .step strong{display:block;margin-bottom:7px}
+    .step strong{display:block;margin-bottom:6px;font-size:1.08rem}
+    .step span{color:var(--muted)}
+
+    /* Contact */
+    .contact-wrap{padding-top:0}
     .contact{
-      background:white;border:1px solid var(--line);border-radius:30px;padding:42px;
-      display:grid;grid-template-columns:1fr .85fr;gap:36px;align-items:center
+      border:1px solid var(--line);border-radius:var(--radius);padding:48px;
+      display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center
     }
-    .contact-box{background:var(--soft);padding:24px;border-radius:18px}
-    .contact-box a{color:var(--accent-dark);text-decoration:none;font-weight:700}
-    footer{padding:36px 0 46px;color:var(--muted);font-size:.9rem}
+    .contact-box{background:var(--band);padding:28px;border-radius:var(--radius);border-left:3px solid var(--accent)}
+    .contact-box strong{font-size:1.08rem}
+    .contact-box a{color:var(--navy);font-weight:700;text-underline-offset:3px}
+    .contact-box a:hover{color:var(--accent-dark)}
+
+    footer{padding:32px 0 44px;color:var(--muted);font-size:.9rem;border-top:1px solid var(--line)}
+
     @media (max-width:860px){
       .hero-grid,.product,.contact{grid-template-columns:1fr}
-      .grid3{grid-template-columns:1fr}
-      .process{grid-template-columns:1fr 1fr}
+      .grid3{grid-template-columns:1fr;gap:28px}
+      .process{grid-template-columns:1fr;gap:28px}
+      .step{border-top:0;border-left:2px solid var(--line);padding:0 0 0 30px;margin-left:14px}
+      .step::before{top:-2px;left:-15px}
       .navlinks a:not(.btn){display:none}
-      .hero{padding-top:58px}
+      .hero{padding-top:56px}
+      section{padding:64px 0}
     }
     @media (max-width:560px){
-      .process{grid-template-columns:1fr}
-      .contact{padding:26px}
-      .product{padding:26px}
-      .hero-card{padding:18px}
+      .contact,.product{padding:26px}
       .btn{width:100%}
       .cta-row{width:100%}
     }
@@ -124,7 +154,7 @@
 <header>
   <div class="wrap">
     <nav>
-      <div class="brand">Byte of Wisdom</div>
+      <a class="brand" href="#">Byte <span>of</span> Wisdom</a>
       <div class="navlinks">
         <a href="#solutions">Solutions</a>
         <a href="#product">Featured Product</a>
@@ -139,7 +169,7 @@
   <section class="hero">
     <div class="wrap hero-grid">
       <div>
-        <span class="eyebrow">Built for small business</span>
+        <span class="label">Built for small business</span>
         <h1>Simple technology.<br>Smarter business.</h1>
         <p>Byte of Wisdom creates practical digital solutions that help small businesses answer customers faster, organize work better, and automate repetitive tasks.</p>
         <div class="cta-row">
@@ -147,12 +177,9 @@
           <a class="btn secondary" href="mailto:latrice@byteofwisdom.com">Talk About Your Business</a>
         </div>
       </div>
-      <div class="hero-card">
-        <div class="mock">
-          <div class="mock-top">
-            <strong>Customer Q&A Assistant</strong>
-            <span><i class="dot"></i><i class="dot"></i><i class="dot"></i></span>
-          </div>
+      <div class="mock" aria-label="Example conversation with the Customer Q&amp;A Assistant">
+        <div class="mock-top"><span class="status" aria-hidden="true"></span>Customer Q&amp;A Assistant</div>
+        <div class="mock-body">
           <div class="bubble bot">Hi! What can I help you find today?</div>
           <div class="bubble user">What do I need to apply?</div>
           <div class="bubble bot">I can walk you through the business's approved application requirements and next steps.</div>
@@ -166,23 +193,20 @@
   <section id="solutions">
     <div class="wrap">
       <div class="section-head">
-        <span class="eyebrow">What we build</span>
+        <span class="label">What we build</span>
         <h2>Technology that solves a real business problem.</h2>
         <p>We focus on useful, affordable systems instead of unnecessary complexity.</p>
       </div>
       <div class="grid3">
-        <div class="card">
-          <div class="num">01</div>
+        <div class="service">
           <h3>Customer Assistants</h3>
           <p>Branded website assistants that answer common customer questions using information approved by your business.</p>
         </div>
-        <div class="card">
-          <div class="num">02</div>
+        <div class="service">
           <h3>Custom Business Apps</h3>
           <p>Simple tools for jobs, customers, invoices, payments, records, and other everyday workflows.</p>
         </div>
-        <div class="card">
-          <div class="num">03</div>
+        <div class="service">
           <h3>Workflow Automation</h3>
           <p>Reduce repetitive manual work by connecting the steps your business already performs every day.</p>
         </div>
@@ -194,17 +218,17 @@
     <div class="wrap">
       <div class="product">
         <div>
-          <span class="eyebrow">Featured product</span>
-          <h2>Customer Q&A Assistant</h2>
+          <span class="label">Featured product</span>
+          <h2>Customer Q&amp;A Assistant</h2>
           <p>Give customers a faster way to get answers without making them search through your website or call for every routine question.</p>
-          <div class="feature-list">
-            <div class="feature"><span class="check">✓</span><span>Custom branded for your business</span></div>
-            <div class="feature"><span class="check">✓</span><span>Uses your approved questions and answers</span></div>
-            <div class="feature"><span class="check">✓</span><span>Mobile-friendly and website-ready</span></div>
-            <div class="feature"><span class="check">✓</span><span>Built to reduce repetitive customer inquiries</span></div>
-          </div>
+          <ul class="feature-list">
+            <li>Custom branded for your business</li>
+            <li>Uses your approved questions and answers</li>
+            <li>Mobile-friendly and website-ready</li>
+            <li>Built to reduce repetitive customer inquiries</li>
+          </ul>
         </div>
-        <div class="card" style="color:#172033">
+        <div class="demo">
           <h3>See a working example</h3>
           <p>Our current rental-assistant demonstration shows how the same core product can be customized for a specific industry and business.</p>
           <a class="btn" href="https://ldgreen25.github.io/rental-qa-assistant/" target="_blank" rel="noopener">Open Live Demo</a>
@@ -216,31 +240,31 @@
   <section id="process">
     <div class="wrap">
       <div class="section-head">
-        <span class="eyebrow">Our approach</span>
+        <span class="label">Our approach</span>
         <h2>From business problem to working solution.</h2>
       </div>
-      <div class="process">
-        <div class="step"><strong>Discover</strong><span>Understand the problem.</span></div>
-        <div class="step"><strong>Build</strong><span>Create the solution.</span></div>
-        <div class="step"><strong>Prove</strong><span>Test it in real use.</span></div>
-        <div class="step"><strong>Demonstrate</strong><span>Show the result.</span></div>
-        <div class="step"><strong>Pilot & Scale</strong><span>Launch, learn, expand.</span></div>
-      </div>
+      <ol class="process">
+        <li class="step"><strong>Discover</strong><span>Understand the problem.</span></li>
+        <li class="step"><strong>Build</strong><span>Create the solution.</span></li>
+        <li class="step"><strong>Prove</strong><span>Test it in real use.</span></li>
+        <li class="step"><strong>Demonstrate</strong><span>Show the result.</span></li>
+        <li class="step"><strong>Pilot &amp; Scale</strong><span>Launch, learn, expand.</span></li>
+      </ol>
     </div>
   </section>
 
-  <section>
+  <section class="contact-wrap">
     <div class="wrap">
       <div class="contact">
         <div>
-          <span class="eyebrow">Have a repetitive business problem?</span>
+          <span class="label">Have a repetitive business problem?</span>
           <h2>There may be a simpler way to handle it.</h2>
           <p>Tell us what your team or customers repeatedly have to do. We’ll look for a practical way to simplify it.</p>
         </div>
         <div class="contact-box">
           <strong>Start a conversation</strong>
           <p>Email Byte of Wisdom to discuss your business and what you want to improve.</p>
-          <a href="mailto:latrice@byteofwisdom.com">latrice@byteofwisdom.com →</a>
+          <a href="mailto:latrice@byteofwisdom.com">latrice@byteofwisdom.com</a>
         </div>
       </div>
     </div>
