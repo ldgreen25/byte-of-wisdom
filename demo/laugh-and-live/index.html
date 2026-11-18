@@ -360,6 +360,8 @@ const COURSES=[
   {q:"How often are HCBS quality reviews held at Laugh & Live, LLC?",o:["Quarterly (4 times a year)","Every three years","Only after an incident","Never"],a:0}]}
 ];
 COURSES.forEach(c=>{c.qs.forEach(q=>{q.p=q.p||1});c.total=c.qs.reduce((t,q)=>t+q.p,0);c.short=c.short||c.title});
+const ROLE_NAMES=["Direct Support Professional","QDDP","Counselor","Program Manager","Office / Admin Staff"];
+function defaultRoles(){const all=COURSES.map(c=>c.id);return{"Direct Support Professional":all.slice(),"QDDP":all.slice(),"Counselor":all.slice(),"Program Manager":all.slice(),"Office / Admin Staff":["hr","conf","sir","ic","emer"]}}
 const slideSrc=(c,i)=>c.deck?`slides/${c.deck}-${String(i+1).padStart(2,"0")}.jpg`:null;
 const thumb=(c,cls)=>c.deck?`<img class="${cls}" src="${slideSrc(c,0)}" alt="">`:`<div class="${cls} ph"><span>${esc(c.short)}</span></div>`;
 
@@ -376,14 +378,15 @@ function seed(){
    {id:"jc",name:"Jasmine Carter",role:"Direct Support Professional",email:"jasmine.carter@example.com",hire:iso(addDays(today,-5))},
    {id:"mb",name:"Marcus Bell",role:"Counselor",email:"marcus.bell@example.com",hire:"2024-03-11"},
    {id:"tr",name:"Tanya Ruiz",role:"Program Manager",email:"tanya.ruiz@example.com",hire:"2023-08-02"},
-   {id:"dp",name:"Devon Price",role:"Direct Support Professional",email:"devon.price@example.com",hire:iso(addDays(today,-12))}];
+   {id:"dp",name:"Devon Price",role:"Direct Support Professional",email:"devon.price@example.com",hire:iso(addDays(today,-12))},
+   {id:"rh",name:"Renee Hall",role:"Office / Admin Staff",email:"renee.hall@example.com",hire:"2025-01-15"}];
   const rec={};
   staff.forEach(s=>COURSES.forEach(c=>{
     const hire=new Date(s.hire+"T00:00:00");
     const newHire=(today-hire)/864e5<60;
     rec[s.id+"|"+c.id]={assigned:newHire?s.hire:iso(addDays(today,-20)),due:newHire?iso(addBiz(hire,15)):iso(addDays(today,40)),watched:0,attempts:[],cert:null};
   }));
-  const st={staff,rec,mail:[],certSeq:1};
+  const st={staff,rec,mail:[],certSeq:1,roles:defaultRoles()};
   const done=(sid,cid,days,score)=>{const r=rec[sid+"|"+cid];const d=iso(addDays(today,-days));r.watched=COURSES.find(c=>c.id===cid).minutes;r.attempts=[{date:d,score}];r.cert={no:certNo(st),date:d,score};};
   // Tanya: everything current, one renewal coming up
   [["hr",125,100],["conf",120,100],["sir",119,93],["ic",118,97],["emer",345,93],["doc",117,93],["pc",116,100],["hcbs",115,90]].forEach(x=>done("tr",...x));
@@ -395,12 +398,14 @@ function seed(){
   const dc=rec["dp|conf"];dc.watched=30;dc.attempts=[{date:iso(addDays(today,-4)),score:72}];
   const de=rec["dp|emer"];de.watched=45;de.attempts=[{date:iso(addDays(today,-6)),score:63},{date:iso(addDays(today,-5)),score:70},{date:iso(addDays(today,-2)),score:73}];
   rec["dp|doc"].watched=12;
+  // Renee (office staff): only her 5 required courses, all current
+  [["hr",160,96],["conf",158,100],["sir",157,89],["ic",156,93],["emer",155,90]].forEach(x=>done("rh",...x));
   return st;
 }
 function certNo(st){return "LL-"+today.getFullYear()+"-"+String(st.certSeq++).padStart(4,"0")}
-const KEY="ll-training-demo-v3";
+const KEY="ll-training-demo-v4";
 let S; try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
-if(!S||!S.staff||!S.rec||!S.rec["jc|hcbs"])S=seed();
+if(!S||!S.staff||!S.rec||!S.roles||!S.rec["jc|hcbs"])S=seed();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 
 const expires=c=>c?iso(addDays(new Date(c.date+"T00:00:00"),365)):null;
@@ -416,6 +421,10 @@ function status(sid,cid){
   if(r.watched>0)return{k:"In progress",cls:"c-acc",r};
   return{k:"Not started",cls:"c-idle",r};
 }
+const staffOf=id=>S.staff.find(x=>x.id===id);
+const reqIds=st=>(S.roles[st.role]||COURSES.map(c=>c.id));
+const isReq=(sid,cid)=>reqIds(staffOf(sid)).includes(cid);
+const reqCourses=st=>COURSES.filter(c=>reqIds(st).includes(c.id));
 const mmss=m=>{const t=Math.round(m*60);return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0")};
 
 let role="staff", who="jc", view={name:"list"}, timer=null;
@@ -446,14 +455,15 @@ function render(){
 function renderList(){
   const s=S.staff.find(x=>x.id===who);
   const orient=addBiz(new Date(s.hire+"T00:00:00"),15);
-  const items=COURSES.map(c=>{const st=status(s.id,c.id);const r=st.r;
+  const mine=reqCourses(s);
+  const items=mine.map(c=>{const st=status(s.id,c.id);const r=st.r;
     const locked=!r.cert&&r.attempts.length>=MAX_ATTEMPTS;
     const action=r.cert?`<button class="btn" data-cert="${c.id}">View certificate</button>`:(locked?`<button class="btn" disabled>Ask your supervisor</button>`:`<button class="btn primary" data-open="${c.id}">${r.watched>0?"Continue":"Start"}</button>`);
     const due=r.cert?`Renew by ${fmt(expires(r.cert))}`:`Due ${fmt(r.due)}`;
     return `<div class="course">${thumb(c,"thumb")}<div><div class="row" style="gap:8px 12px"><h3>${esc(c.title)}</h3><span class="chip ${st.cls}">${st.k}</span></div>
     <div class="meta"><span>${c.minutes} min · ${c.slides?c.slides+" slides":"slides not uploaded yet"} · ${c.qs.length}-question test</span><span>${due}</span>${r.attempts.length&&!r.cert?`<span>Attempts ${r.attempts.length} of ${MAX_ATTEMPTS}</span>`:""}${r.cert?`<span>Score ${r.cert.score}%</span>`:""}</div></div>
     <div>${action}</div></div>`}).join("");
-  app.innerHTML=`<div class="section-head"><div><h1>My trainings</h1><p class="muted small" style="margin:4px 0 0">${esc(s.name)} · ${esc(s.role)} · Hired ${fmt(s.hire)}</p></div>
+  app.innerHTML=`<div class="section-head"><div><h1>My trainings</h1><p class="muted small" style="margin:4px 0 0">${esc(s.name)} · ${esc(s.role)} · Hired ${fmt(s.hire)} · ${mine.length} required training${mine.length===1?"":"s"} for this role</p></div>
   <p class="small muted" style="margin:0">Orientation due within 15 business days of hire: <b class="mono">${fmt(iso(orient))}</b></p></div>
   <div class="list">${items}</div>`;
   app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>go({name:"course",cid:b.dataset.open}));
@@ -606,7 +616,7 @@ async function certPDF(s,c,cert){
 
 function renderAdmin(){
   const tab=view.tab||"board";
-  let all=[];S.staff.forEach(s=>COURSES.forEach(c=>all.push(status(s.id,c.id))));
+  let all=[];S.staff.forEach(s=>reqCourses(s).forEach(c=>all.push(status(s.id,c.id))));
   const count=k=>all.filter(x=>k.includes(x.k)).length;
   const tiles=`<div class="tiles">
    <div class="tile"><b>${count(["Completed","Renewal due soon"])}</b><span>Completed and current</span></div>
@@ -614,12 +624,12 @@ function renderAdmin(){
    <div class="tile ${count(["Overdue","Expired"])?"alert":""}"><b>${count(["Overdue","Expired"])}</b><span>Overdue or expired</span></div>
    <div class="tile ${count(["Locked: needs reset"])?"alert":""}"><b>${count(["Locked: needs reset"])}</b><span>Locked after ${MAX_ATTEMPTS} failed attempts</span></div>
    <div class="tile"><b>${count(["Renewal due soon"])}</b><span>Renewals due in 30 days</span></div></div>`;
-  const tabs=`<div class="tabs" role="tablist">${[["board","Training status"],["person","Employee record"],["staff","Employees"],["courses","Course library"],["mail","Email log"]].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" data-tab="${k}">${l}</button>`).join("")}</div>`;
+  const tabs=`<div class="tabs" role="tablist">${[["board","Training status"],["person","Employee record"],["staff","Employees"],["roles","Roles"],["courses","Course library"],["mail","Email log"]].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" data-tab="${k}">${l}</button>`).join("")}</div>`;
   let body="";
   if(tab==="board"){
     body=`<div class="tablewrap"><table class="board"><thead><tr><th>Employee</th>${COURSES.map(c=>`<th>${esc(c.short)}</th>`).join("")}</tr></thead><tbody>
     ${S.staff.map(s=>`<tr><td><b>${esc(s.name)}</b><span class="sub">${esc(s.role)}</span><span class="sub">Orientation due ${fmt(iso(addBiz(new Date(s.hire+"T00:00:00"),15)))}</span></td>
-     ${COURSES.map(c=>{const st=status(s.id,c.id),r=st.r;return `<td><span class="chip ${st.cls}">${st.k}</span>
+     ${COURSES.map(c=>{if(!isReq(s.id,c.id))return `<td><span class="sub" style="margin:0">Not required</span></td>`;const st=status(s.id,c.id),r=st.r;return `<td><span class="chip ${st.cls}">${st.k}</span>
        <span class="sub">${r.cert?`Score ${r.cert.score}% · ${fmt(r.cert.date)}`:`Due ${fmt(r.due)} · ${Math.round(Math.min(r.watched,c.minutes))} of ${c.minutes} min done`}</span>
        ${r.attempts.length&&!r.cert?`<span class="sub">Attempts: ${r.attempts.map(a=>a.score+"%").join(", ")}</span>`:""}
        ${st.k.startsWith("Locked")?`<button class="linkbtn small" data-unlock="${s.id}|${c.id}">Reset attempts</button>`:""}</td>`}).join("")}</tr>`).join("")}
@@ -627,34 +637,41 @@ function renderAdmin(){
   } else if(tab==="person"){
     const sid=view.sid||S.staff[0].id, s=S.staff.find(x=>x.id===sid);
     const orient=iso(addBiz(new Date(s.hire+"T00:00:00"),15));
-    const orientDone=COURSES.filter(c=>c.orientation).every(c=>S.rec[sid+"|"+c.id].cert);
+    const orientDone=reqCourses(s).filter(c=>c.orientation).every(c=>S.rec[sid+"|"+c.id].cert);
     body=`<div class="row" style="margin-bottom:14px"><label class="small muted" for="pick">Employee</label><select id="pick">${S.staff.map(x=>`<option value="${x.id}" ${x.id===sid?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div>
     <div class="panel" style="margin-top:0"><div class="section-head" style="margin-bottom:8px"><h2>Training record: ${esc(s.name)}</h2>${(()=>{const newHire=(today-new Date(s.hire+"T00:00:00"))/864e5<60;
       if(newHire||!orientDone&&false)return `<span class="chip ${orientDone?"c-good":(orient<iso(today)?"c-bad":"c-warn")}">Orientation ${orientDone?"complete":(orient<iso(today)?"past due":"due "+fmt(orient))}</span>`;
-      const bad=COURSES.filter(c=>["Overdue","Expired","Locked: needs reset"].includes(status(sid,c.id).k)).length;
+      const bad=reqCourses(s).filter(c=>["Overdue","Expired","Locked: needs reset"].includes(status(sid,c.id).k)).length;
       return bad?`<span class="chip c-bad">${bad} training${bad>1?"s":""} need${bad>1?"":"s"} attention</span>`:`<span class="chip c-good">All trainings current</span>`})()}</div>
-     <p class="small muted" style="margin:0 0 12px">${esc(s.role)} · Hired ${fmt(s.hire)} · Personal email <span class="mono">${esc(s.email)}</span></p>
+     <p class="small muted" style="margin:0 0 12px"><label>Role <select id="chrole" style="margin-left:4px">${Object.keys(S.roles).map(r=>`<option ${r===s.role?"selected":""}>${esc(r)}</option>`).join("")}</select></label> · ${reqCourses(s).length} required · Hired ${fmt(s.hire)} · Personal email <span class="mono">${esc(s.email)}</span></p>
      <div class="tablewrap"><table><thead><tr><th>Training</th><th>Status</th><th>Completed</th><th>Score</th><th>Attempts</th><th>Certificate</th><th>Renew by</th></tr></thead><tbody>
-     ${COURSES.map(c=>{const st=status(sid,c.id),r=st.r;return `<tr><td>${esc(c.short)}</td><td><span class="chip ${st.cls}">${st.k}</span></td><td>${r.cert?fmt(r.cert.date):"—"}</td><td>${r.cert?r.cert.score+"%":"—"}</td><td>${r.attempts.length?r.attempts.map(a=>a.score+"%").join(", "):"—"}</td><td>${r.cert?`<button class="linkbtn mono" data-view="${c.id}">${r.cert.no}</button>`:"—"}</td><td>${r.cert?fmt(expires(r.cert)):"—"}</td></tr>`}).join("")}
+     ${reqCourses(s).map(c=>{const st=status(sid,c.id),r=st.r;return `<tr><td>${esc(c.short)}</td><td><span class="chip ${st.cls}">${st.k}</span></td><td>${r.cert?fmt(r.cert.date):"—"}</td><td>${r.cert?r.cert.score+"%":"—"}</td><td>${r.attempts.length?r.attempts.map(a=>a.score+"%").join(", "):"—"}</td><td>${r.cert?`<button class="linkbtn mono" data-view="${c.id}">${r.cert.no}</button>`:"—"}</td><td>${r.cert?fmt(expires(r.cert)):"—"}</td></tr>`}).join("")}
      </tbody></table></div>
      <p class="small muted" style="margin:12px 0 0">This record is the inspection view: one page per employee showing every required training, dates, scores, and certificates.</p></div>`;
   } else if(tab==="staff"){
     body=`<div class="panel" style="margin-top:0"><h2 style="margin-bottom:12px">Add an employee</h2>
      <form id="addf" class="form" novalidate>
       <label>Full name<input name="name" autocomplete="off" required></label>
-      <label>Role<select name="role"><option>Direct Support Professional</option><option>Counselor</option><option>Program Manager</option><option>QDDP</option><option>Other</option></select></label>
+      <label>Role<select name="role">${Object.keys(S.roles).map(r=>`<option>${esc(r)}</option>`).join("")}</select></label>
       <label>Personal email<input name="email" type="email" autocomplete="off"></label>
       <label>Hire date<input name="hire" type="date" value="${iso(today)}" required></label>
       <div><button class="btn primary" type="submit">Add employee</button></div></form>
      <p class="err" id="adderr" hidden></p>
-     <p class="small muted" style="margin:12px 0 0">New employees are assigned all ${COURSES.length} required trainings. Orientation is due within 15 business days of hire.</p></div>
+     <p class="small muted" style="margin:12px 0 0">New employees are assigned the trainings their role requires (set on the Roles tab). Orientation is due within 15 business days of hire.</p></div>
      <div class="tablewrap" style="margin-top:16px"><table><thead><tr><th>Employee</th><th>Role</th><th>Hired</th><th>Email</th><th>Completed</th><th>Needs attention</th></tr></thead><tbody>
-     ${S.staff.map(x=>{const st=COURSES.map(c=>status(x.id,c.id));const done=st.filter(t=>t.k==="Completed"||t.k==="Renewal due soon").length;const bad=st.filter(t=>["Overdue","Expired","Locked: needs reset"].includes(t.k)).length;
-       return `<tr><td><button class="linkbtn" data-rec="${x.id}">${esc(x.name)}</button></td><td>${esc(x.role)}</td><td>${fmt(x.hire)}</td><td class="mono small">${esc(x.email||"—")}</td><td>${done} of ${COURSES.length}</td><td>${bad?`<span class="chip c-bad">${bad}</span>`:"—"}</td></tr>`}).join("")}
+     ${S.staff.map(x=>{const xr=reqCourses(x);const st=xr.map(c=>status(x.id,c.id));const done=st.filter(t=>t.k==="Completed"||t.k==="Renewal due soon").length;const bad=st.filter(t=>["Overdue","Expired","Locked: needs reset"].includes(t.k)).length;
+       return `<tr><td><button class="linkbtn" data-rec="${x.id}">${esc(x.name)}</button></td><td>${esc(x.role)}</td><td>${fmt(x.hire)}</td><td class="mono small">${esc(x.email||"—")}</td><td>${done} of ${xr.length}</td><td>${bad?`<span class="chip c-bad">${bad}</span>`:"—"}</td></tr>`}).join("")}
+     </tbody></table></div>`;
+  } else if(tab==="roles"){
+    const rn=Object.keys(S.roles);
+    body=`<p class="small muted" style="margin:0 0 12px;max-width:70ch">Check the trainings each role must complete. Employees see only their role's trainings, and the status board and inspection record follow the same rules. Changes apply right away.</p>
+     <div class="tablewrap"><table class="roles"><thead><tr><th>Training</th>${rn.map(r=>`<th style="text-align:center">${esc(r)}<span style="display:block;text-transform:none;letter-spacing:0;font-weight:500;margin-top:3px">${S.staff.filter(x=>x.role===r).length} staff</span></th>`).join("")}</tr></thead><tbody>
+     ${COURSES.map(c=>`<tr><td><b>${esc(c.short)}</b></td>${rn.map(r=>`<td style="text-align:center"><input type="checkbox" data-rc="${esc(r)}|${c.id}" aria-label="${esc(c.short)} required for ${esc(r)}" ${S.roles[r].includes(c.id)?"checked":""} style="width:18px;height:18px;accent-color:var(--accent)"></td>`).join("")}</tr>`).join("")}
+     <tr><td class="muted small">Total required</td>${rn.map(r=>`<td style="text-align:center" class="mono">${S.roles[r].length}</td>`).join("")}</tr>
      </tbody></table></div>`;
   } else if(tab==="courses"){
     body=`<div class="cat">${COURSES.map(c=>`<div class="card">${thumb(c,"cimg")}<div><h3>${esc(c.title)}</h3>
-      <p class="small muted" style="margin:6px 0 0">${c.reg?esc(c.reg)+" · ":""}${c.slides?c.slides+" slides":"Slides needed"} · ${c.minutes} min required · ${c.qs.length} questions (${c.total} pts) · 80% to pass · renew yearly</p></div></div>`).join("")}</div>
+      <p class="small muted" style="margin:6px 0 0">${c.reg?esc(c.reg)+" · ":""}${c.slides?c.slides+" slides":"Slides needed"} · Required for ${Object.keys(S.roles).filter(r=>S.roles[r].includes(c.id)).length} of ${Object.keys(S.roles).length} roles · ${c.minutes} min required · ${c.qs.length} questions (${c.total} pts) · 80% to pass · renew yearly</p></div></div>`).join("")}</div>
       <p class="small muted" style="margin:14px 0 0">Courses are built from Laugh &amp; Live's own training slides and tests.</p>`;
   } else {
     body=S.mail.length?`<div class="log">${S.mail.map(m=>`<div><b>${esc(m.subject)}</b> <span class="muted small">· ${esc(m.when)}</span><br>To <span class="mono">${esc(m.to)}</span> · Copy <span class="mono">${esc(m.cc)}</span><br><span class="muted">${esc(m.body)}</span></div>`).join("")}</div>`
@@ -663,6 +680,14 @@ function renderAdmin(){
   app.innerHTML=`<div class="section-head"><h1>Training administration</h1><span class="small muted">As of ${fmt(iso(today))}</span></div>${tiles}${tabs}${body}`;
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>go({name:"admin",tab:b.dataset.tab,sid:view.sid}));
   app.querySelectorAll("[data-unlock]").forEach(b=>b.onclick=()=>{S.rec[b.dataset.unlock].attempts=[];save();toast("Attempts reset. The employee can retake the test.");render()});
+  app.querySelectorAll("[data-rc]").forEach(b=>b.onchange=()=>{const i=b.dataset.rc.lastIndexOf("|");const r=b.dataset.rc.slice(0,i),cid=b.dataset.rc.slice(i+1);const set=S.roles[r];
+    if(b.checked){if(!set.includes(cid))set.push(cid);let n=0;S.staff.filter(x=>x.role===r).forEach(x=>{const rc=S.rec[x.id+"|"+cid];if(!rc.cert&&!rc.watched&&!rc.attempts.length){rc.assigned=iso(today);const hd=new Date(x.hire+"T00:00:00");rc.due=(today-hd)/864e5<60?iso(addBiz(hd,15)):iso(addDays(today,30))}n++});
+      toast(`${COURSES.find(c=>c.id===cid).short} is now required for ${r}${n?` (${n} staff)`:""}`)}
+    else{S.roles[r]=set.filter(x=>x!==cid);toast(`${COURSES.find(c=>c.id===cid).short} is no longer required for ${r}`)}
+    S.roles[r].sort((a,b)=>COURSES.findIndex(c=>c.id===a)-COURSES.findIndex(c=>c.id===b));save();render()});
+  const chrole=document.getElementById("chrole");if(chrole)chrole.onchange=()=>{const x=staffOf(view.sid||S.staff[0].id);x.role=chrole.value;
+    reqCourses(x).forEach(c=>{const rc=S.rec[x.id+"|"+c.id];if(!rc.cert&&!rc.watched&&!rc.attempts.length&&rc.due<iso(today)){rc.assigned=iso(today);rc.due=iso(addDays(today,30))}});
+    save();toast(`${x.name} is now ${x.role}: ${reqCourses(x).length} required trainings`);render()};
   app.querySelectorAll("[data-rec]").forEach(b=>b.onclick=()=>go({name:"admin",tab:"person",sid:b.dataset.rec}));
   const addf=document.getElementById("addf");
   if(addf)addf.onsubmit=e=>{e.preventDefault();const fd=new FormData(addf);const err=document.getElementById("adderr");
@@ -672,7 +697,7 @@ function renderAdmin(){
     const id="e"+Date.now().toString(36);const hd=new Date(hire+"T00:00:00");const recent=(today-hd)/864e5<60;
     S.staff.push({id,name,role:String(fd.get("role")),email,hire});
     COURSES.forEach(c=>{S.rec[id+"|"+c.id]={assigned:iso(today),due:recent?iso(addBiz(hd,15)):iso(addDays(today,30)),watched:0,attempts:[],cert:null}});
-    save();toast(`${name} added and assigned ${COURSES.length} trainings`);go({name:"admin",tab:"staff"})};
+    save();toast(`${name} added and assigned ${reqIds({role:String(fd.get("role"))}).length} trainings`);go({name:"admin",tab:"staff"})};
   const pick=document.getElementById("pick");if(pick)pick.onchange=()=>go({name:"admin",tab:"person",sid:pick.value});
   app.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>go({name:"cert",cid:b.dataset.view,sid:view.sid||S.staff[0].id}));
 }
