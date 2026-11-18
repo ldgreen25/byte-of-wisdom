@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Laugh & Live Training · Demo</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one app shell — top bar with role switch, then a single working view (list → course → test → certificate, or admin board). */
+:root{
+  --bg:#f6f4f7; --surface:#ffffff; --sunk:#efebf2; --ink:#221d27; --muted:#675f6e; --line:#e2dce7;
+  --accent:#6b3f7a; --accent-ink:#ffffff; --accent-soft:#efe4f3;
+  --good:#2c7a57; --good-soft:#e2f2ea; --warn:#9a6210; --warn-soft:#fbefd9; --bad:#b03636; --bad-soft:#f8e1e1; --idle:#5d6670; --idle-soft:#eceff2;
+  --screen:#1d1922; --screen-ink:#f3eef6;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#16131a; --surface:#201c25; --sunk:#1a171e; --ink:#eeeaf2; --muted:#a69daf; --line:#352f3c;
+  --accent:#c99be0; --accent-ink:#1b1220; --accent-soft:#33263b;
+  --good:#6cc89d; --good-soft:#1e3329; --warn:#e3aa52; --warn-soft:#3a2d17; --bad:#f08484; --bad-soft:#3d2121; --idle:#a8b1ba; --idle-soft:#2a2e33;
+  --screen:#0e0c11; --screen-ink:#f3eef6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16131a; --surface:#201c25; --sunk:#1a171e; --ink:#eeeaf2; --muted:#a69daf; --line:#352f3c;
+  --accent:#c99be0; --accent-ink:#1b1220; --accent-soft:#33263b;
+  --good:#6cc89d; --good-soft:#1e3329; --warn:#e3aa52; --warn-soft:#3a2d17; --bad:#f08484; --bad-soft:#3d2121; --idle:#a8b1ba; --idle-soft:#2a2e33;
+  --screen:#0e0c11; --screen-ink:#f3eef6; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);padding-top:env(safe-area-inset-top,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:calc(48px + env(safe-area-inset-bottom,0px))}
+[hidden]{display:none!important}
+img{max-width:100%}
+.wrap{max-width:1080px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:1.7rem} h2{font-size:1.3rem} h3{font-size:1.05rem}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+
+/* top bar */
+.top{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;padding-block:18px 14px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand b{font-family:var(--f-display);font-size:1.25rem;letter-spacing:.01em}
+.brand span{font-size:.8rem;color:var(--muted);font-style:italic}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:6px 14px;border-radius:999px;font-weight:600;font-size:.88rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;max-width:100%}
+.demo-note{background:var(--accent-soft);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:.86rem;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:space-between}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:600;padding:0;text-decoration:underline;text-underline-offset:3px}
+
+/* buttons */
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;font-weight:600;font-size:.9rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.demo{border-style:dashed;color:var(--muted)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.c-good{background:var(--good-soft);color:var(--good)} .c-warn{background:var(--warn-soft);color:var(--warn)}
+.c-bad{background:var(--bad-soft);color:var(--bad)} .c-idle{background:var(--idle-soft);color:var(--idle)}
+.c-acc{background:var(--accent-soft);color:var(--accent)}
+
+/* staff list */
+.section-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+.list{display:grid;gap:10px}
+.course{display:grid;grid-template-columns:120px 1fr auto;gap:8px 16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px 12px 12px}
+.course .thumb{width:120px;aspect-ratio:16/9;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block}
+.course .meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;color:var(--muted)}
+.course > div{min-width:0}
+@media (max-width:640px){.course{grid-template-columns:1fr}.course .thumb{width:100%}}
+
+/* player */
+.back{margin-bottom:14px}
+.player{background:var(--screen);color:var(--screen-ink);border-radius:14px;overflow:hidden}
+.frame{position:relative;aspect-ratio:16/9;background:#000;display:flex;align-items:center;justify-content:center}
+.frame img{width:100%;height:100%;object-fit:contain;display:block}
+.frame .k{position:absolute;left:12px;top:12px;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;background:rgba(0,0,0,.6);color:#fff;padding:3px 8px;border-radius:6px}
+.bar{display:flex;gap:12px;align-items:center;padding:12px 16px;background:rgba(255,255,255,.06)}
+.bar .play{width:40px;height:40px;border-radius:50%;border:0;background:var(--screen-ink);color:var(--screen);font-weight:700;flex:none}
+.track{position:relative;flex:1;height:10px;border-radius:6px;background:rgba(255,255,255,.14);cursor:pointer;min-width:0}
+.track .seen{position:absolute;inset:0 auto 0 0;background:rgba(255,255,255,.28);border-radius:6px}
+.track .pos{position:absolute;inset:0 auto 0 0;background:#d7b4ea;border-radius:6px}
+.bar .t{font-family:var(--f-mono);font-size:.8rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+.watch{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.stat b{display:block;font-family:var(--f-mono);font-size:1.1rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;margin-top:16px}
+
+/* quiz */
+.q{border-top:1px solid var(--line);padding-block:14px}
+.q:first-of-type{border-top:0}
+.q legend{font-weight:600;margin-bottom:8px;padding:0}
+.q .pts{font-weight:500;color:var(--muted);font-size:.8rem;margin-left:6px}
+.sec{font-family:var(--f-display);font-size:1rem;margin:18px 0 2px;padding-top:12px;border-top:2px solid var(--line)}
+.sec:first-child{margin-top:0;padding-top:0;border-top:0}
+fieldset{border:0;margin:0;padding:0}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:8px;cursor:pointer}
+.opt:hover{background:var(--sunk)}
+.opt input{margin-top:4px;accent-color:var(--accent)}
+.result{border-radius:12px;padding:16px 18px;margin-top:16px}
+.result.pass{background:var(--good-soft)} .result.fail{background:var(--bad-soft)}
+
+/* certificate */
+.cert{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px}
+.cert-in{border:2px solid var(--accent);border-radius:4px;padding:clamp(20px,5vw,44px);text-align:center;display:grid;gap:10px}
+.cert-in .eyebrow{font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.cert-in .name{font-family:var(--f-display);font-size:clamp(1.6rem,5vw,2.3rem);color:var(--accent)}
+.cert-in .course-t{font-family:var(--f-display);font-size:1.2rem}
+.cert-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px;text-align:left}
+.cert-grid div{border-top:1px solid var(--line);padding-top:6px}
+.cert-grid span{display:block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mail{font-size:.86rem;background:var(--sunk);border-radius:10px;padding:12px 14px;margin-top:14px}
+
+/* admin */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.tile b{display:block;font-family:var(--f-display);font-size:1.8rem;line-height:1.1}
+.tile span{font-size:.82rem;color:var(--muted)}
+.tile.alert{border-color:var(--bad)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:.88rem}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+td .sub{display:block;font-size:.76rem;color:var(--muted);margin-top:3px}
+table.board{min-width:1180px}
+table.board th:first-child,table.board td:first-child{position:sticky;left:0;z-index:1;min-width:180px;background:var(--surface);box-shadow:1px 0 0 var(--line)}
+table.board th:first-child{background:var(--sunk)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 16px}
+.tabs button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 12px;font-weight:600;font-size:.86rem;color:var(--muted)}
+.tabs button[aria-selected="true"]{border-color:var(--accent);color:var(--accent)}
+.log{display:grid;gap:8px}
+.log div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.86rem}
+.cat{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.cat .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.cat .card .cimg{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;border-bottom:1px solid var(--line)}
+.ph{display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);font-family:var(--f-display);font-weight:700;text-align:center;padding:6px;line-height:1.15}
+.course .ph{font-size:.8rem}
+.noslides{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;background:linear-gradient(135deg,#3a2546,#1d1922)}
+.noslides b{font-family:var(--f-display);font-size:clamp(1.3rem,4vw,2rem)}
+.noslides span{opacity:.8;max-width:44ch}
+.vlink{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);background:#c4302b;color:#fff;font-weight:700;padding:10px 18px;border-radius:999px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.35);white-space:nowrap}
+.cat .card div{padding:12px 14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.9rem;max-width:calc(100% - 32px);z-index:20}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end}
+.form label{display:grid;gap:4px;font-size:.82rem;color:var(--muted);font-weight:600}
+.form input,.form select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;font-size:.95rem;color:var(--ink);width:100%}
+.err{color:var(--bad);font-size:.85rem;margin:8px 0 0}
+.foot{margin-top:36px;font-size:.78rem;color:var(--muted);text-align:center}
+@media (prefers-reduced-motion:no-preference){.track .pos{transition:width .2s linear}}
+</style></head><body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><b>Laugh &amp; Live, LLC · Training</b><span>Laugh everyday, Love beyond words</span></div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="View as">
+        <button id="role-staff" aria-pressed="true">Employee</button>
+        <button id="role-admin" aria-pressed="false">Administrator</button>
+      </div>
+      <label class="small muted" for="who">Signed in as</label>
+      <select id="who"></select>
+    </div>
+  </header>
+  <div class="demo-note">
+    <span><b>Demo.</b> Real Laugh &amp; Live courses with sample staff. Lesson time runs at demo speed (1 second = 1 minute), and "Skip to end" is for demos only. No real emails are sent.</span>
+    <button class="linkbtn" id="reset">Reset demo data</button>
+  </div>
+  <main id="app"></main>
+  <p class="foot">Powered by Byte of Wisdom</p>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const AGENCY_EMAIL="laughandlivellc@gmail.com";
+const PASS=0.8, MAX_ATTEMPTS=3;
+const TF=["True","False"];
+// Each question: q text, o options, a correct index, p points, s section, fixed = keep option order
+const COURSES=[
+ {id:"hr",title:"Human Rights",minutes:30,orientation:true,deck:null,slides:0,
+  sections:["Multiple choice","True or false","Scenarios"],
+  qs:[
+  {s:0,q:"Individuals receiving DD services maintain:",o:["Only limited legal rights","Rights determined by staff","All rights granted to any citizen","Rights only during service hours"],a:2},
+  {s:0,q:"Self-determination means:",o:["Staff make decisions for the individual","Individuals have the right to make choices about their own lives","Only family members make decisions","Goals are selected by providers only"],a:1},
+  {s:0,q:"Person-centered services are designed around:",o:["Staff schedules and convenience","Provider preferences","The individual's unique needs, preferences, and goals","State inspections only"],a:2},
+  {s:0,q:"Which of the following demonstrates dignity and respect?",o:["Speaking about the individual instead of to them","Using labels to describe individuals","Honoring personal choices and preferences","Entering personal spaces without knocking"],a:2},
+  {s:0,q:"Personal records and health information:",o:["May be shared freely among staff","Are confidential and require proper consent or legal authority to share","Can be discussed in public settings","Do not require privacy protection"],a:1},
+  {s:0,q:"Which of the following is considered neglect?",o:["Respecting individual choices","Failing to provide necessary care or supervision","Encouraging independence","Supporting self-determination"],a:1},
+  {s:0,q:"At Laugh & Live, LLC, staff who suspect abuse, neglect, or exploitation must:",o:["Wait for proof before acting","Report it immediately","Discuss it only with coworkers","Ignore minor concerns"],a:1},
+  {s:0,q:"Individuals have the right to:",o:["Be denied complaint assistance","File complaints without retaliation","Avoid all service planning","Have complaints ignored"],a:1},
+  {s:0,q:"Which role does the Human Rights Advocate perform?",o:["Approving payroll records","Investigating rights complaints and protecting individual rights","Scheduling transportation only","Managing billing systems"],a:1},
+  {s:0,q:"Rights in service delivery include:",o:["Restricting communication with family","Denying community access","Providing information in plain, understandable language","Limiting participation in service planning"],a:2},
+  {s:1,q:"Staff should knock before entering an individual's personal space.",o:TF,a:0},
+  {s:1,q:"Staff may monitor private phone calls without permission.",o:TF,a:1},
+  {s:1,q:"All staff are mandatory reporters of suspected abuse, neglect, or exploitation.",o:TF,a:0},
+  {s:1,q:"Individuals have the right to participate in planning their own services.",o:TF,a:0},
+  {s:1,q:"Failure to report a rights violation may result in disciplinary action.",o:TF,a:0},
+  {s:2,p:2,q:"You are preparing to assist an individual with personal care. What should you do to protect their privacy and dignity?",o:["Knock before entering, explain the care, respect personal space, keep it confidential, and communicate respectfully","Work quickly and skip explaining so it's over sooner","Leave the door open in case a coworker needs you","Chat with a coworker about the person during care"],a:0},
+  {s:2,p:2,q:"An individual tells you they want to file a complaint about services. What are your responsibilities?",o:["Help them file it, make sure it's reported, protect them from retaliation, and explain the process in plain language","Tell them complaints usually don't change anything","Ask them to wait until their family visits","Handle it yourself without reporting it"],a:0},
+  {s:2,p:2,q:"You witness another staff member speaking disrespectfully to an individual. What should you do?",o:["Follow policy: report it to your supervisor or the Human Rights Advocate, document your concerns, and protect the person's rights and dignity","Ignore it unless it happens again","Confront the coworker in front of the individual","Post about it on social media"],a:0},
+  {s:2,p:2,q:"A staff member suspects financial exploitation involving an individual's money. What must be done?",o:["Report it immediately, document observations, notify Liz Lewis and/or Human Rights Advocate Latoya Wilburn, and make sure the person is safe","Collect proof for a few weeks before reporting","Ask the coworker to quietly pay it back","Bring it up at the next staff meeting"],a:0},
+  {s:2,p:2,q:"Why is it important to involve the Human Rights Advocate when a serious rights concern or restriction comes up?",o:["They provide independent review, investigate concerns, approve required restrictions, and protect the person's rights","They process payroll for the staff involved","They are only needed if the family complains","They decide which staff members are disciplined"],a:0}]},
+
+ {id:"conf",title:"Practices of Confidentiality",short:"Confidentiality",reg:"12VAC35-105-440",minutes:30,orientation:true,deck:"conf",slides:10,
+  sections:["Multiple choice","True or false","Scenarios"],
+  qs:[
+  {s:0,q:"Confidentiality is considered the cornerstone of Laugh & Live, LLC's relationship with individuals because:",o:["It reduces paperwork","It builds trust","It increases profits","It limits documentation"],a:1},
+  {s:0,q:"Virginia regulation 12VAC35-105-440 requires protection of:",o:["Only paper records","Only electronic records","All portions of an individual's record","Only verbal disclosures"],a:2},
+  {s:0,q:"Who is responsible for maintaining confidentiality at Laugh & Live, LLC?",o:["Only supervisors","Only clinical staff","Staff members only","Staff, contractors, interns, and volunteers"],a:3},
+  {s:0,q:"Access to client records should be based on:",o:["Curiosity","Friendship with the client","Legitimate, documented need","Years of employment"],a:2},
+  {s:0,q:"Before sharing records in person, by phone, or electronically, staff must:",o:["Assume the person is authorized","Verify identity and authorization","Ask another employee","Share only partial information"],a:1},
+  {s:0,q:"Copies of client records:",o:["Are less sensitive than originals","Can be made without approval","Carry the same level of sensitivity as originals","Do not require safeguards"],a:2},
+  {s:0,q:"All copied records must be labeled:",o:["“Private”","“Protected”","“CONFIDENTIAL”","“For Office Use Only”"],a:2},
+  {s:0,q:"Sharing client information generally requires:",o:["Verbal permission","Supervisor approval only","Signed written consent","Staff discretion"],a:2},
+  {s:0,q:"Which situation may allow limited disclosure without written consent?",o:["Staff curiosity","A genuine emergency or court order","Requests from friends","Social media inquiries"],a:1},
+  {s:0,q:"If you suspect a confidentiality breach, you should:",o:["Ignore it","Wait until the next meeting","Notify your supervisor immediately","Handle it privately without reporting"],a:2},
+  {s:1,q:"Confidentiality protections apply from intake through record retention and destruction.",o:TF,a:0},
+  {s:1,q:"It is acceptable to discuss client information in break rooms if clients are not present.",o:TF,a:1},
+  {s:1,q:"Unauthorized copying or distribution of records is considered a serious policy violation.",o:TF,a:0},
+  {s:1,q:"Confidentiality breaches can result in emotional harm, legal action, and reputational damage.",o:TF,a:0},
+  {s:1,q:"When unsure about sharing information, employees should ask before acting.",o:TF,a:0},
+  {s:2,p:2,q:"A staff member accidentally leaves client files unattended on a printer. What should they do immediately?",o:["Secure the records right away, prevent anyone else from seeing them, and notify a supervisor if necessary","Leave them, since the printer is in a staff-only area","Shred them and reprint later without telling anyone","Ask a coworker to drop them at the front desk"],a:0},
+  {s:2,p:2,q:"A coworker asks to view a client record out of curiosity because they “know the family.” What is the correct response?",o:["Deny access. Only authorized staff with a legitimate, documented need may view records","Let them look, since they already know the family","Let them look if no supervisor is around","Summarize the record out loud instead of showing it"],a:0},
+  {s:2,p:2,q:"Someone calls claiming to be authorized to receive client information. What must you do before sharing anything?",o:["Verify the caller's identity, confirm authorization, and make sure proper consent exists","Share basic details, since they said they are authorized","Share only the client's address","Ask for their name, then share what they need"],a:0},
+  {s:2,p:2,q:"Which are best practices for protecting digital client files?",o:["Use strong passwords, enable encryption, and log out when stepping away","Share one login so coverage is easier","Save copies to your personal phone as a backup","Leave your screen unlocked during short breaks"],a:0},
+  {s:2,p:2,q:"After client information is legally disclosed, what must be documented?",o:["What was shared, with whom, when, and the reason for the disclosure","Only the date","Nothing, because the disclosure was legal","Only the name of the person who asked"],a:0}]},
+
+ {id:"sir",title:"Serious Incident Reporting",short:"Serious Incidents",reg:"12VAC35-105-440",minutes:30,orientation:true,deck:"sir",slides:14,
+  sections:["Multiple choice","True or false","Classification scenarios","Process & accountability"],
+  qs:[
+  {s:0,q:"The primary purpose of serious incident reporting is to:",o:["Increase paperwork","Protect lives and ensure compliance","Discipline staff","Reduce documentation"],a:1},
+  {s:0,q:"A serious incident is any event that:",o:["Causes minor inconvenience only","Poses significant risk of harm, injury, abuse, neglect, or death","Involves scheduling conflicts","Only affects staff members"],a:1},
+  {s:0,q:"Which of the following is considered a reportable serious incident?",o:["Routine scheduling change","Minor disagreement between staff","Medication error with potential harm","Late arrival to work"],a:2},
+  {s:0,q:"Serious incidents must be reported:",o:["After confirmation is received","Only if harm occurred","Immediately upon discovery or suspicion","At the end of the week"],a:2},
+  {s:0,q:"Formal written documentation must be completed within:",o:["2 hours","12 hours","24 hours","72 hours"],a:2,fixed:true},
+  {s:0,q:"Level II and Level III incidents must be submitted through:",o:["CONNECT","CHRIS","DELTA","VIDES"],a:1},
+  {s:0,q:"A Level 2 incident typically involves:",o:["No harm","Temporary harm or significant distress requiring intervention","Death only","Administrative concerns only"],a:1},
+  {s:0,q:"Which of the following is an example of a Level 3 incident?",o:["Minor scrape without injury","Refusal of medication without consequence","Hospitalization or death","Late documentation"],a:2},
+  {s:0,q:"A Root Cause Analysis (RCA) must generally be completed within:",o:["7 days","14 days","30 days","60 days"],a:2,fixed:true},
+  {s:0,q:"Failure to report serious incidents may result in:",o:["Praise from leadership","No consequences","Regulatory sanctions and legal liability","Reduced training requirements"],a:2},
+  {s:1,q:"Incidents should still be reported even if later found unsubstantiated.",o:TF,a:0},
+  {s:1,q:"Reporting protects both clients and staff.",o:TF,a:0},
+  {s:1,q:"Staff should wait for supervisor approval before reporting a serious incident.",o:TF,a:1},
+  {s:1,q:"Root Cause Analysis focuses only on blaming individuals.",o:TF,a:1},
+  {s:1,q:"Every staff member contributes to Laugh & Live, LLC's safety culture.",o:TF,a:0},
+  {s:2,p:3,q:"A client falls and has minor bruising with no lasting harm. Which classification applies?",o:["Level 1: minor, no lasting harm, and documentation is still required","Level 2: moderate","Level 3: severe","Not reportable, so no documentation is needed"],a:0,fixed:true},
+  {s:2,p:3,q:"A client requires hospitalization after a serious injury. Which incident level applies?",o:["Level 1","Level 2","Level 3: severe, involving serious injury and hospitalization","Not reportable"],a:2,fixed:true},
+  {s:2,p:3,q:"A medication error is found and corrected before any harm occurs. Should it still be reported?",o:["Yes. All incidents must be reported regardless of intent or outcome","No, because no harm occurred","Only if the family asks about it","Only if it happens a second time"],a:0},
+  {s:2,p:3,q:"A client goes missing for several hours but is found unharmed. Which classification is most likely?",o:["Level 1","Level 2: missing person with significant risk requiring intervention","Level 3","Not reportable, since they were found"],a:1,fixed:true},
+  {s:2,p:3,q:"An unexplained death involving a client occurs. What must happen immediately after discovery?",o:["Notify the supervisor, submit required reports including CHRIS, begin investigation procedures, and start Root Cause Analysis","Wait for the medical examiner before telling anyone","Call the family, then write it up next week","Complete the internal form only"],a:0},
+  {s:3,p:3,q:"Which details must be included in an incident report?",o:["Who, what, when, where, how, witnesses, and immediate actions taken","Only the client's name and the date","Your opinion of who was at fault","Only what your supervisor tells you to write"],a:0},
+  {s:3,p:3,q:"After submitting a CHRIS report, who should staff notify internally?",o:["Their direct supervisor and leadership contacts, including Devan, Liz, and LaWanda","No one, because CHRIS notifies everyone","Only the client's family","Only the coworkers on shift"],a:0},
+  {s:3,p:3,q:"What is the purpose of a Root Cause Analysis (RCA)?",o:["To find underlying causes, system failures, and process gaps so it doesn't happen again","To decide which staff member to blame","To close the incident as quickly as possible","To avoid reporting to DBHDS"],a:0},
+  {s:3,p:3,q:"Why is confidentiality important during serious incident reporting?",o:["It protects sensitive client and staff information and keeps the agency compliant with privacy rules","It means incidents don't need to be reported","It keeps supervisors from finding out","It isn't important during incidents"],a:0},
+  {s:3,p:3,q:"How does timely reporting improve safety and quality of care?",o:["It allows rapid intervention, prevents further harm, strengthens procedures and training, and supports quality care","It mostly reduces paperwork","It only matters for billing","It doesn't change outcomes"],a:0}]},
+
+ {id:"ic",title:"Infection Control Practices & Measures",short:"Infection Control",minutes:20,orientation:true,deck:null,slides:0,
+  sections:["Multiple choice","True or false","Scenarios"],
+  qs:[
+  {s:0,q:"The primary purpose of infection control practices is to:",o:["Reduce paperwork","Protect staff, clients, and the community","Increase office productivity","Eliminate all workplace risks"],a:1},
+  {s:0,q:"Proper handwashing should last at least:",o:["10 seconds","15 seconds","20 seconds","30 seconds"],a:2,fixed:true},
+  {s:0,q:"Hand sanitizer should contain at least:",o:["40% alcohol","50% alcohol","60% alcohol","90% alcohol"],a:2,fixed:true},
+  {s:0,q:"Which of the following is considered a key moment for hand hygiene?",o:["Before eating only","After coughing or sneezing only","Before and after client contact and after touching shared surfaces","Once at the start of the shift"],a:2},
+  {s:0,q:"Disposable gloves should:",o:["Be reused if they look clean","Be changed between clients","Only be worn during emergencies","Be optional for body fluid exposure"],a:1},
+  {s:0,q:"Which item below is considered PPE?",o:["Keyboard","Face shield","Notebook","Cleaning cloth"],a:1},
+  {s:0,q:"High-touch surfaces include:",o:["Ceilings","Floors only","Doorknobs, phones, and keyboards","Windows only"],a:2},
+  {s:0,q:"Safe distancing guidelines recommend maintaining at least:",o:["3 feet","4 feet","6 feet","10 feet"],a:2,fixed:true},
+  {s:0,q:"Universal precautions require staff to:",o:["Treat only visible blood as infectious","Treat all body fluids as potentially infectious","Wear gloves only when clients appear sick","Avoid reporting minor exposures"],a:1},
+  {s:0,q:"If you experience symptoms of a communicable illness, you should:",o:["Wait until symptoms worsen","Finish your work shift","Notify your supervisor immediately","Ignore mild symptoms"],a:2},
+  {s:1,q:"Hand sanitizer completely replaces proper handwashing.",o:TF,a:1},
+  {s:1,q:"Communicable illnesses can spread before symptoms appear.",o:TF,a:0},
+  {s:1,q:"Cleaning should always occur before disinfecting surfaces.",o:TF,a:0},
+  {s:1,q:"Reporting exposure immediately helps prevent outbreaks.",o:TF,a:0},
+  {s:1,q:"Universal precautions are optional if a client appears healthy.",o:TF,a:1},
+  {s:2,p:3,q:"You are cleaning a shared workstation used by several staff. What steps should you follow?",o:["Clean visible dirt first, then disinfect high-touch surfaces with an EPA-approved disinfectant, wearing gloves and following the label's contact time","Spray disinfectant and wipe it off right away","Disinfect first, then clean later if it still looks dirty","Wipe everything with a dry cloth"],a:0},
+  {s:2,p:3,q:"A coworker was exposed to someone with COVID-like symptoms but feels fine and doesn't want to report it. What should they do?",o:["Notify their supervisor immediately, even though they feel fine, because illness can spread before symptoms appear","Wait and see if symptoms develop","Tell only a few coworkers","Wear a mask and say nothing"],a:0},
+  {s:2,p:3,q:"While assisting a client, blood accidentally gets on your skin. What should you do immediately?",o:["Wash the area thoroughly with soap and water, report the exposure right away, complete an incident report, and get a medical evaluation if directed","Wipe it off and keep working","Report it at the end of your shift","Use hand sanitizer only"],a:0},
+  {s:2,p:3,q:"A client begins coughing repeatedly during an interaction. What should you do right away?",o:["Keep distance when possible, use a mask properly, clean your hands, disinfect shared surfaces, and follow respiratory hygiene","Leave the client alone for the rest of the day","Carry on as normal","Give the client cough medicine"],a:0},
+  {s:2,p:3,q:"Why does following infection control consistently build trust at Laugh & Live, LLC?",o:["It creates a safe, dependable environment, protects staff and clients, prevents outbreaks, and helps everyone feel respected","It reduces the number of trainings needed","It only matters during flu season","It is mainly for inspections"],a:0}]},
+
+ {id:"emer",title:"Emergency Preparedness & Response",short:"Emergency Preparedness",reg:"12 VAC 35-105-530",minutes:45,orientation:true,deck:"emer",slides:23,
+  sections:["Multiple choice","True or false","Scenarios"],
+  qs:[
+  {s:0,q:"The primary purpose of emergency preparedness training is to:",o:["Increase paperwork","Protect lives and maintain safety","Reduce staffing needs","Eliminate emergency responders"],a:1},
+  {s:0,q:"Policy 12 VAC 35-105-530 establishes:",o:["Medication guidelines only","Emergency preparedness requirements for providers","Payroll procedures","Transportation regulations"],a:1},
+  {s:0,q:"Which phase of emergency management focuses on immediate action during an emergency?",o:["Mitigation","Preparedness","Response","Recovery"],a:2,fixed:true},
+  {s:0,q:"During a fire emergency, the “A” in RACE stands for:",o:["Alert","Alarm","Assess","Assemble"],a:1},
+  {s:0,q:"During evacuation, staff should:",o:["Use elevators if faster","Wait for instructions before moving","Proceed to the designated assembly area","Return inside for personal belongings"],a:2},
+  {s:0,q:"Shelter-in-place is used when:",o:["It is safer to remain indoors than evacuate","Staff want to avoid paperwork","Transportation is unavailable","Visitors are present"],a:0},
+  {s:0,q:"During a medical emergency, staff should first:",o:["Notify family members","Call a supervisor","Assess the situation and call 911 if needed","Complete documentation"],a:2},
+  {s:0,q:"In a missing person incident, staff should:",o:["Wait several hours before acting","Immediately begin search procedures and contact 911","Search alone without notifying anyone","Close the facility first"],a:1},
+  {s:0,q:"Confidential information during emergencies should:",o:["Be shared publicly for awareness","Be protected and shared only when necessary","Be ignored during evacuation","Be discussed openly with all staff"],a:1},
+  {s:0,q:"Emergency drills are important because they:",o:["Replace emergency plans","Help staff practice coordinated responses","Remove the need for training","Prevent all emergencies"],a:1},
+  {s:1,q:"All staff must complete emergency preparedness training annually.",o:TF,a:0},
+  {s:1,q:"Elevators should be used during fire evacuations.",o:TF,a:1},
+  {s:1,q:"Shelter-in-place may be necessary during severe weather or hazardous material incidents.",o:TF,a:0},
+  {s:1,q:"Staff should know the individual emergency plans of the people they support.",o:TF,a:0},
+  {s:1,q:"Protecting confidentiality remains important during emergencies.",o:TF,a:0},
+  {s:2,p:3,q:"A fire alarm sounds in the building. What are the correct evacuation steps?",o:["Activate the alarm if needed, exit calmly by the nearest safe route without elevators, assist individuals, go to the assembly area, and wait for clearance before re-entering","Finish what you're doing, then leave","Take the elevator to get out faster","Wait in your room until someone comes for you"],a:0},
+  {s:2,p:3,q:"An individual who uses a wheelchair must evacuate. How should staff support them?",o:["Use accessible routes, give physical help as needed, keep them safe and calm, and never leave them unattended","Evacuate everyone else first, then come back","Use the elevator, even during a fire","Have them wait by the door for responders"],a:0},
+  {s:2,p:3,q:"During a severe storm warning, staff are told to shelter in place. What should they do?",o:["Move to an interior room away from windows, monitor alerts, stay calm, seal doors and windows if hazardous materials are involved, and wait for the all-clear","Go outside to check the weather","Stand near windows to watch the storm","Leave as soon as the rain stops, before the all-clear"],a:0},
+  {s:2,p:3,q:"A person receiving services suddenly becomes unconscious and has trouble breathing. What should staff do?",o:["Check responsiveness and breathing, call 911, follow the dispatcher, give first aid or CPR if trained, notify a supervisor, stay with them, and document afterward","Call the person's family first","Write the incident report first","Put them in a car and drive to the hospital"],a:0},
+  {s:2,p:3,q:"Why is clear communication important during emergencies, and who should be notified during major incidents?",o:["It prevents confusion and supports a coordinated response; notify responders, supervisors, leadership, families or authorized representatives, and state authorities when required","It's mostly for paperwork; notify only your supervisor","It can wait until the next day","Only families need to be notified"],a:0}]},
+
+ {id:"doc",title:"Clinical Documentation: Progress Notes, Timeliness & the Client's Book",short:"Clinical Documentation",minutes:30,orientation:true,deck:"doc",slides:10,
+  sections:["Multiple choice","True or false","Short answer"],
+  qs:[
+  {s:0,q:"Why is clinical documentation important in DD/IDD services?",o:["It is only used for marketing purposes","It serves as a legal record, supports care continuity, and ensures accountability","It replaces the Individual Service Plan (ISP)","It is optional if verbal updates are provided"],a:1},
+  {s:0,q:"Every progress note must include which of the following?",o:["Staff personal opinions about the client","Only the client's diagnosis","Date, time, duration, and service type","Family financial information"],a:2},
+  {s:0,q:"Which statement best describes acceptable documentation?",o:["“Client did well today.”","“Session was productive.”","“Client demonstrated improved coping skills with success during redirection activities.”","“Client behaved normally.”"],a:2},
+  {s:0,q:"Progress notes must directly reference:",o:["The previous staff member's opinion","The staff schedule","The ISP goals and objectives","Billing totals only"],a:2},
+  {s:0,q:"Progress notes should be completed within:",o:["72 hours","48 hours","24 hours","By the end of the month"],a:2,fixed:true},
+  {s:0,q:"Which of the following is considered poor documentation practice?",o:["Using measurable behavioral language","Copying and pasting the same note repeatedly","Including client responses to interventions","Referencing the ISP objective"],a:1},
+  {s:0,q:"Why should staff review recent progress notes before providing services?",o:["To shorten documentation time","To avoid duplication and understand current client status","To replace reviewing the ISP","To create longer progress notes"],a:1},
+  {s:0,q:"What information may be found in the Client's Book?",o:["ISP goals and objectives","Assessment updates","Progress note history","All of the above"],a:3,fixed:true},
+  {s:1,q:"Documentation completed several days after services were provided may reduce accuracy.",o:TF,a:0},
+  {s:1,q:"Staff may document services before the session occurs if they know the schedule in advance.",o:TF,a:1},
+  {s:1,q:"Measurable and observable language should be used in progress notes.",o:TF,a:0},
+  {s:1,q:"Reviewing the Client's Book before each session helps improve service delivery and care coordination.",o:TF,a:0},
+  {s:1,q:"Leaving a progress note unsigned is acceptable if the information is accurate.",o:TF,a:1},
+  {s:2,q:"Which list contains four required elements of a progress note?",o:["Date, time, duration, and service type; client presentation; the ISP goal and objective; the client's response to intervention","Staff opinion; the weather; family finances; the client's diagnosis","Billing total; staff schedule; the client's address; the previous staff member's opinion","The client's favorite foods; staff initials only; the shift length; the room number"],a:0},
+  {s:2,q:"Why is timely documentation important in DD/IDD services?",o:["Records stay accurate while memory is fresh, and it supports client safety and prevents billing denials","It lets staff skip reviewing the Client's Book","It makes notes longer","It isn't important if the service happened"],a:0}]},
+
+ {id:"pc",title:"Person-Centeredness",minutes:25,orientation:true,deck:"pc",slides:10,
+  links:{5:{url:"https://www.youtube.com/watch?v=ikwmiUWcXEk",label:"Open Video 1 on YouTube"}},
+  qs:[
+  {q:"Person-centeredness recognizes each person as:",o:["The expert of their own life","Someone staff need to supervise","A schedule to keep on track","A case to manage"],a:0},
+  {q:"An individual makes a choice that differs from what you would choose. What should you do?",o:["Support it and honor their right to decide","Redirect them to the better option","Ask their family to overrule it","Make the choice for them to keep them safe"],a:0},
+  {q:"“Dignity of risk” means:",o:["People have the right to take reasonable risks; staff support informed decisions, not overprotection","Staff should remove all risk from a person's life","Only staff decide which risks are acceptable","Risks are never allowed during services"],a:0},
+  {q:"The Individual Support Plan (ISP) is best described as:",o:["The roadmap for each person's life, carried out with fidelity","Paperwork completed only for audits","A suggestion staff can ignore","A plan written by staff without the person"],a:0},
+  {q:"A woman communicates with gestures and a communication device. Staff should:",o:["Learn and honor her communication style so she is truly heard and included","Speak only with her family instead","Skip asking her preferences","Use only yes-or-no questions with her family"],a:0},
+  {q:"Promoting independence means:",o:["Stepping back when appropriate and encouraging skill-building","Doing tasks for people to save time","Keeping people indoors where it's safe","Letting staff set every daily routine"],a:0},
+  {q:"Community participation is:",o:["A right, and staff actively create opportunities for it","An optional extra if there is time","Only for people who ask for it","Only allowed on weekends"],a:0},
+  {q:"Which best describes the direct support staff role?",o:["A support professional who supports outcomes, preferences, and independence","A babysitter who watches people","A bystander who stays out of the way","Someone who only keeps people on schedule"],a:0},
+  {q:"When policies or systems make person-centered practice hard, staff should:",o:["Advocate within the policies, keep the person's voice central, and document and escalate barriers","Stop trying until the policy changes","Ignore the ISP","Let the person know nothing can be done"],a:0},
+  {q:"Supports should be:",o:["Individualized to each person's circumstances, preferences, and goals","The same generic plan for everyone","Based on what is easiest for staff","Decided only by the agency"],a:0}]},
+
+ {id:"hcbs",title:"Home & Community-Based Services (HCBS)",short:"HCBS",minutes:30,orientation:true,deck:"hcbs",slides:13,
+  qs:[
+  {q:"How many core HCBS rights does this training cover?",o:["3","5","7","10"],a:2,fixed:true},
+  {q:"Which Virginia agency oversees HCBS standards for Laugh & Live, LLC?",o:["DBHDS (Department of Behavioral Health and Developmental Services)","The DMV","The IRS","The Department of Education"],a:0},
+  {q:"Community integration means:",o:["Active participation and belonging, not just being present","Driving past community places","Group outings chosen by staff","Staying in the home for safety"],a:0},
+  {q:"Can a DSP put a rights restriction in place on their own?",o:["No. All modifications must be authorized by the team","Yes, if they think it is safer","Yes, for up to one week","Yes, if the person agrees verbally"],a:0},
+  {q:"Rights may be modified only when:",o:["Health or safety requires it, with documentation and review","It makes the shift easier for staff","A person breaks a house rule","A family member asks"],a:0},
+  {q:"A rights modification must be:",o:["Individualized, documented, time-limited, reviewed, and the least restrictive option","Permanent once it is approved","The same for everyone in the home","Used as a consequence for behavior"],a:0},
+  {q:"Which shows privacy and dignity in practice?",o:["Knocking first, using preferred names, speaking respectfully, and protecting information","Talking about the person in front of others","Entering rooms without knocking","Sharing details with anyone who asks"],a:0},
+  {q:"Which is the better daily note?",o:["“Chose to attend the community art class, selected lunch at the café, and declined the afternoon group activity.”","“Had a good day.”","“Went out.”","“No issues.”"],a:0},
+  {q:"If you notice pressure, threats, or unnecessary restriction, you should:",o:["Recognize it as a rights concern, speak up early, and report it right away","Wait to see if it happens again","Handle it without telling anyone","Ignore it if no one was hurt"],a:0},
+  {q:"How often are HCBS quality reviews held at Laugh & Live, LLC?",o:["Quarterly (4 times a year)","Every three years","Only after an incident","Never"],a:0}]}
+];
+COURSES.forEach(c=>{c.qs.forEach(q=>{q.p=q.p||1});c.total=c.qs.reduce((t,q)=>t+q.p,0);c.short=c.short||c.title});
+const slideSrc=(c,i)=>c.deck?`slides/${c.deck}-${String(i+1).padStart(2,"0")}.jpg`:null;
+const thumb=(c,cls)=>c.deck?`<img class="${cls}" src="${slideSrc(c,0)}" alt="">`:`<div class="${cls} ph"><span>${esc(c.short)}</span></div>`;
+
+// dates
+const today=new Date(); today.setHours(0,0,0,0);
+const iso=d=>{const x=new Date(d);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const addBiz=(d,n)=>{let x=new Date(d),c=0;while(c<n){x.setDate(x.getDate()+1);const w=x.getDay();if(w&&w<6)c++;}return x};
+const fmt=s=>{if(!s)return"—";const d=new Date(s+"T00:00:00");return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function seed(){
+  const staff=[
+   {id:"jc",name:"Jasmine Carter",role:"Direct Support Professional",email:"jasmine.carter@example.com",hire:iso(addDays(today,-5))},
+   {id:"mb",name:"Marcus Bell",role:"Counselor",email:"marcus.bell@example.com",hire:"2024-03-11"},
+   {id:"tr",name:"Tanya Ruiz",role:"Program Manager",email:"tanya.ruiz@example.com",hire:"2023-08-02"},
+   {id:"dp",name:"Devon Price",role:"Direct Support Professional",email:"devon.price@example.com",hire:iso(addDays(today,-12))}];
+  const rec={};
+  staff.forEach(s=>COURSES.forEach(c=>{
+    const hire=new Date(s.hire+"T00:00:00");
+    const newHire=(today-hire)/864e5<60;
+    rec[s.id+"|"+c.id]={assigned:newHire?s.hire:iso(addDays(today,-20)),due:newHire?iso(addBiz(hire,15)):iso(addDays(today,40)),watched:0,attempts:[],cert:null};
+  }));
+  const st={staff,rec,mail:[],certSeq:1};
+  const done=(sid,cid,days,score)=>{const r=rec[sid+"|"+cid];const d=iso(addDays(today,-days));r.watched=COURSES.find(c=>c.id===cid).minutes;r.attempts=[{date:d,score}];r.cert={no:certNo(st),date:d,score};};
+  // Tanya: everything current, one renewal coming up
+  [["hr",125,100],["conf",120,100],["sir",119,93],["ic",118,97],["emer",345,93],["doc",117,93],["pc",116,100],["hcbs",115,90]].forEach(x=>done("tr",...x));
+  // Marcus: documentation expired, emergency overdue
+  [["hr",205,96],["conf",200,96],["sir",199,89],["ic",198,90],["doc",372,87],["pc",197,100],["hcbs",196,90]].forEach(x=>done("mb",...x));
+  rec["mb|emer"].due=iso(addDays(today,-3));
+  // Devon (new hire): two done, confidentiality needs a retake, emergency locked after 3 tries, documentation in progress
+  done("dp","hr",9,92);done("dp","sir",8,84);
+  const dc=rec["dp|conf"];dc.watched=30;dc.attempts=[{date:iso(addDays(today,-4)),score:72}];
+  const de=rec["dp|emer"];de.watched=45;de.attempts=[{date:iso(addDays(today,-6)),score:63},{date:iso(addDays(today,-5)),score:70},{date:iso(addDays(today,-2)),score:73}];
+  rec["dp|doc"].watched=12;
+  return st;
+}
+function certNo(st){return "LL-"+today.getFullYear()+"-"+String(st.certSeq++).padStart(4,"0")}
+const KEY="ll-training-demo-v3";
+let S; try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(!S||!S.staff||!S.rec||!S.rec["jc|hcbs"])S=seed();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+
+const expires=c=>c?iso(addDays(new Date(c.date+"T00:00:00"),365)):null;
+function status(sid,cid){
+  const r=S.rec[sid+"|"+cid];
+  if(r.cert){const ex=expires(r.cert);const left=(new Date(ex+"T00:00:00")-today)/864e5;
+    if(left<0)return{k:"Expired",cls:"c-bad",r};
+    if(left<=30)return{k:"Renewal due soon",cls:"c-warn",r};
+    return{k:"Completed",cls:"c-good",r};}
+  if(r.attempts.length>=MAX_ATTEMPTS)return{k:"Locked: needs reset",cls:"c-bad",r};
+  if(r.due<iso(today))return{k:"Overdue",cls:"c-bad",r};
+  if(r.attempts.length)return{k:"Retake needed",cls:"c-warn",r};
+  if(r.watched>0)return{k:"In progress",cls:"c-acc",r};
+  return{k:"Not started",cls:"c-idle",r};
+}
+const mmss=m=>{const t=Math.round(m*60);return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0")};
+
+let role="staff", who="jc", view={name:"list"}, timer=null;
+const app=document.getElementById("app"), whoSel=document.getElementById("who");
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2600)}
+function fillWho(){
+  whoSel.innerHTML=role==="staff"?S.staff.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join(""):`<option value="admin">LaWanda Jones (Admin)</option>`;
+  whoSel.disabled=role!=="staff"; if(role==="staff")whoSel.value=who;
+}
+whoSel.onchange=()=>{who=whoSel.value;go({name:"list"})};
+function setRole(r){role=r;document.getElementById("role-staff").setAttribute("aria-pressed",r==="staff");document.getElementById("role-admin").setAttribute("aria-pressed",r==="admin");fillWho();go(r==="staff"?{name:"list"}:{name:"admin",tab:"board"})}
+document.getElementById("role-staff").onclick=()=>setRole("staff");
+document.getElementById("role-admin").onclick=()=>setRole("admin");
+let resetArmed=false;
+document.getElementById("reset").onclick=e=>{if(!resetArmed){resetArmed=true;e.target.textContent="Click again to confirm reset";setTimeout(()=>{resetArmed=false;e.target.textContent="Reset demo data"},3500);return}
+  resetArmed=false;e.target.textContent="Reset demo data";S=seed();save();who="jc";toast("Demo data reset");setRole(role)};
+
+function go(v){stopTimer();view=v;render();window.scrollTo({top:0})}
+function stopTimer(){if(timer){clearInterval(timer);timer=null}}
+function render(){
+  if(view.name==="list")return renderList();
+  if(view.name==="course")return renderCourse();
+  if(view.name==="quiz")return renderQuiz();
+  if(view.name==="cert")return renderCert();
+  if(view.name==="admin")return renderAdmin();
+}
+
+function renderList(){
+  const s=S.staff.find(x=>x.id===who);
+  const orient=addBiz(new Date(s.hire+"T00:00:00"),15);
+  const items=COURSES.map(c=>{const st=status(s.id,c.id);const r=st.r;
+    const locked=!r.cert&&r.attempts.length>=MAX_ATTEMPTS;
+    const action=r.cert?`<button class="btn" data-cert="${c.id}">View certificate</button>`:(locked?`<button class="btn" disabled>Ask your supervisor</button>`:`<button class="btn primary" data-open="${c.id}">${r.watched>0?"Continue":"Start"}</button>`);
+    const due=r.cert?`Renew by ${fmt(expires(r.cert))}`:`Due ${fmt(r.due)}`;
+    return `<div class="course">${thumb(c,"thumb")}<div><div class="row" style="gap:8px 12px"><h3>${esc(c.title)}</h3><span class="chip ${st.cls}">${st.k}</span></div>
+    <div class="meta"><span>${c.minutes} min · ${c.slides?c.slides+" slides":"slides not uploaded yet"} · ${c.qs.length}-question test</span><span>${due}</span>${r.attempts.length&&!r.cert?`<span>Attempts ${r.attempts.length} of ${MAX_ATTEMPTS}</span>`:""}${r.cert?`<span>Score ${r.cert.score}%</span>`:""}</div></div>
+    <div>${action}</div></div>`}).join("");
+  app.innerHTML=`<div class="section-head"><div><h1>My trainings</h1><p class="muted small" style="margin:4px 0 0">${esc(s.name)} · ${esc(s.role)} · Hired ${fmt(s.hire)}</p></div>
+  <p class="small muted" style="margin:0">Orientation due within 15 business days of hire: <b class="mono">${fmt(iso(orient))}</b></p></div>
+  <div class="list">${items}</div>`;
+  app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>go({name:"course",cid:b.dataset.open}));
+  app.querySelectorAll("[data-cert]").forEach(b=>b.onclick=()=>go({name:"cert",cid:b.dataset.cert,sid:who}));
+}
+
+function renderCourse(){
+  const c=COURSES.find(x=>x.id===view.cid), r=S.rec[who+"|"+c.id];
+  if(view.pos==null)view.pos=Math.min(r.watched,c.minutes)>=c.minutes?0:Math.min(r.watched,c.minutes);
+  let playing=false;
+  app.innerHTML=`<button class="btn back" id="back">← My trainings</button>
+  <div class="section-head"><h1>${esc(c.title)}</h1>${c.reg?`<span class="small muted">Guided by ${esc(c.reg)}</span>`:""}</div>
+  <div class="player"><div class="frame" id="frame"><img id="slide" alt=""><div class="noslides" id="noslides" hidden><b>${esc(c.title)}</b><span>Slides for this course haven't been uploaded yet. The timer and test still work for the demo.</span></div><a class="vlink" id="vlink" target="_blank" rel="noopener" hidden></a><span class="k" id="part"></span></div>
+   <div class="bar"><button class="play" id="play" aria-label="Play">▶</button>
+    <div class="track" id="track" role="slider" aria-label="Lesson position" tabindex="0"><div class="seen" id="seen"></div><div class="pos" id="pos"></div></div>
+    <span class="t" id="time"></span></div></div>
+  <div class="watch"><div class="stat"><span>Time completed</span><b id="w"></b></div><div class="stat"><span>Required</span><b>${mmss(c.minutes)}</b></div><div class="stat"><span>Test</span><b id="lock"></b></div></div>
+  <div class="panel"><div class="row" style="justify-content:space-between"><p class="small muted" style="margin:0;max-width:56ch">Time only counts while the lesson plays on this screen. Switching tabs pauses it. You can go back, but you can't skip ahead of what you've completed.</p>
+  <div class="row"><button class="btn demo" id="skip">Skip to end (demo only)</button><button class="btn primary" id="take" disabled>Take the test</button></div></div></div>`;
+  const $=id=>document.getElementById(id);
+  // preload slides
+  for(let i=0;i<c.slides;i++){const im=new Image();im.src=slideSrc(c,i)}
+  let shown=-1;
+  if(!c.slides){$("slide").hidden=true;$("noslides").hidden=false}
+  function paint(){
+    if(c.slides){const i=Math.min(c.slides-1,Math.floor(view.pos/c.minutes*c.slides));
+    if(i!==shown){$("slide").src=slideSrc(c,i);$("slide").alt=`${c.title}, slide ${i+1}`;shown=i;
+      const L=c.links&&c.links[i];const v=$("vlink");if(L){v.href=L.url;v.textContent="▶ "+L.label;v.hidden=false;playing=false;stopTimer()}else v.hidden=true}
+    $("part").textContent=`Slide ${i+1} of ${c.slides}`;} else $("part").textContent="Lesson";
+    $("seen").style.width=(Math.min(r.watched,c.minutes)/c.minutes*100)+"%";$("pos").style.width=(view.pos/c.minutes*100)+"%";
+    $("time").textContent=mmss(view.pos)+" / "+mmss(c.minutes);$("w").textContent=mmss(Math.min(r.watched,c.minutes));
+    const ok=r.watched>=c.minutes;$("lock").textContent=ok?"Unlocked":"Locked";$("take").disabled=!ok;$("skip").hidden=ok;
+    $("play").textContent=playing?"❚❚":"▶";$("play").setAttribute("aria-label",playing?"Pause":"Play");
+  }
+  function tick(){ if(!playing||document.hidden)return; // demo speed: 1s = 1 min, tick every 250ms
+    view.pos=Math.min(c.minutes,view.pos+0.25);
+    if(view.pos>r.watched)r.watched=view.pos;
+    if(view.pos>=c.minutes){playing=false;stopTimer();toast("Lesson complete. The test is unlocked.")}
+    save();paint();}
+  $("play").onclick=()=>{playing=!playing;if(playing){if(view.pos>=c.minutes)view.pos=0;timer=timer||setInterval(tick,250)}else stopTimer();paint()};
+  $("track").onclick=e=>{const rc=e.currentTarget.getBoundingClientRect();const want=(e.clientX-rc.left)/rc.width*c.minutes;
+    if(want>r.watched+0.01){toast("You can't skip ahead. Keep going to continue.");return}
+    view.pos=Math.max(0,want);paint()};
+  $("skip").onclick=()=>{playing=false;stopTimer();r.watched=c.minutes;view.pos=c.minutes-0.01;save();paint();toast("Demo: lesson marked complete. The test is unlocked.")};
+  $("back").onclick=()=>go({name:"list"});
+  $("take").onclick=()=>go({name:"quiz",cid:c.id});
+  document.onvisibilitychange=()=>{if(document.hidden&&playing){playing=false;stopTimer();paint()}};
+  paint();
+}
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function renderQuiz(){
+  const c=COURSES.find(x=>x.id===view.cid), r=S.rec[who+"|"+c.id];
+  if(!view.order){
+    // shuffle within each section, keep section order; True/False options stay in order
+    const groups={};c.qs.forEach((q,i)=>{(groups[q.s||0]=groups[q.s||0]||[]).push(i)});
+    view.order=Object.keys(groups).sort((a,b)=>a-b).flatMap(k=>shuffle(groups[k])).map(i=>({i,opts:(c.qs[i].o.length===2||c.qs[i].fixed)?c.qs[i].o.map((t,j)=>j):shuffle(c.qs[i].o.map((t,j)=>j))}));
+  }
+  const n=r.attempts.length+1;let lastSec=null,k=0;
+  const body=view.order.map(o=>{const q=c.qs[o.i];let h="";
+    if(c.sections&&q.s!==lastSec){lastSec=q.s;h+=`<h3 class="sec">${esc(c.sections[q.s])}</h3>`}
+    k++;
+    return h+`<fieldset class="q"><legend>${k}. ${esc(q.q)}<span class="pts">${q.p} pt${q.p>1?"s":""}</span></legend>
+     ${o.opts.map(j=>`<label class="opt"><input type="radio" name="q${o.i}" value="${j}" required><span>${esc(q.o[j])}</span></label>`).join("")}</fieldset>`}).join("");
+  app.innerHTML=`<button class="btn back" id="back">← Back to lesson</button>
+  <div class="section-head"><h1>${esc(c.short)} · Test</h1><span class="small muted">Attempt ${n} of ${MAX_ATTEMPTS} · ${c.total} points · Passing score 80%</span></div>
+  <form class="panel" id="f">${body}
+   <div class="row" style="margin-top:10px"><button class="btn primary" type="submit">Submit answers</button></div></form>`;
+  document.getElementById("back").onclick=()=>go({name:"course",cid:c.id});
+  document.getElementById("f").onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);
+    let pts=0;c.qs.forEach((q,i)=>{if(Number(fd.get("q"+i))===q.a)pts+=q.p});
+    const score=Math.round(pts/c.total*100);r.attempts.push({date:iso(today),score,pts});
+    const s=S.staff.find(x=>x.id===who);
+    if(pts/c.total>=PASS){r.cert={no:certNo(S),date:iso(today),score};
+      S.mail.unshift({when:new Date().toLocaleString("en-US"),to:s.email,cc:AGENCY_EMAIL,subject:`Certificate: ${c.title}`,body:`${s.name} passed with ${score}% (${pts} of ${c.total} points). Certificate ${r.cert.no} attached.`});
+      save();go({name:"cert",cid:c.id,sid:who,fresh:true,pts});return}
+    save();
+    const left=MAX_ATTEMPTS-r.attempts.length;
+    app.insertAdjacentHTML("beforeend",`<div class="result fail" role="status"><h2>Score: ${score}% (${pts} of ${c.total} points)</h2><p style="margin:6px 0 12px">You need 80% to pass. ${left>0?`You have ${left} attempt${left>1?"s":""} left. Questions will be reshuffled.`:"You've used all attempts. Your supervisor will review and reset the test."}</p>
+    <div class="row">${left>0?`<button class="btn primary" id="retry">Retake test</button><button class="btn" id="rewatch">Review the lesson</button>`:`<button class="btn" id="home">Back to my trainings</button>`}</div></div>`);
+    e.target.querySelectorAll("input,button").forEach(x=>x.disabled=true);
+    const rr=document.getElementById("retry");if(rr)rr.onclick=()=>go({name:"quiz",cid:c.id});
+    const rw=document.getElementById("rewatch");if(rw)rw.onclick=()=>go({name:"course",cid:c.id,pos:0});
+    const h=document.getElementById("home");if(h)h.onclick=()=>go({name:"list"});
+    document.querySelector(".result").scrollIntoView({behavior:"smooth",block:"center"});
+  };
+}
+
+function certHTML(s,c,cert){return `<div class="cert"><div class="cert-in">
+  <span class="eyebrow">Certificate of completion</span><span class="muted">Laugh &amp; Live, LLC certifies that</span>
+  <span class="name">${esc(s.name)}</span><span class="muted">has successfully completed</span><span class="course-t">${esc(c.title)}</span>
+  <div class="cert-grid"><div><span>Completion date</span>${fmt(cert.date)}</div><div><span>Score</span>${cert.score}%</div><div><span>Required time</span>${c.minutes} minutes</div><div><span>Certificate no.</span><span class="mono" style="font-size:.9rem;letter-spacing:0;text-transform:none;color:var(--ink)">${cert.no}</span></div><div><span>Valid through</span>${fmt(expires(cert))}</div></div>
+  <p class="small muted" style="margin:14px 0 0">LaWanda Jones, MSW, QDDP · Program Director</p></div></div>`}
+
+function renderCert(){
+  const c=COURSES.find(x=>x.id===view.cid), s=S.staff.find(x=>x.id===view.sid), r=S.rec[s.id+"|"+c.id];
+  app.innerHTML=`<button class="btn back" id="back">← ${role==="admin"?"Employee record":"My trainings"}</button>
+  ${view.fresh?`<div class="result pass" role="status" style="margin:0 0 16px"><h2>You passed with ${r.cert.score}%${view.pts!=null?` (${view.pts} of ${c.total} points)`:""}</h2><p style="margin:6px 0 0">Your certificate is saved to your training history.</p></div>`:""}
+  ${certHTML(s,c,r.cert)}
+  <div class="row" style="margin-top:14px"><button class="btn primary" id="dl" hidden>Download certificate (PDF)</button></div>
+  <div class="mail"><b>Email delivery (simulated)</b><br>To: <span class="mono">${esc(s.email)}</span><br>Copy: <span class="mono">${AGENCY_EMAIL}</span><br>Subject: Certificate: ${esc(c.title)}</div>`;
+  document.getElementById("back").onclick=()=>role==="admin"?go({name:"admin",tab:"person",sid:s.id}):go({name:"list"});
+  const dl=document.getElementById("dl");
+  getDownloads().then(d=>{if(!d||!document.body.contains(dl))return;dl.hidden=false;
+    dl.onclick=async()=>{dl.disabled=true;dl.textContent="Preparing…";
+      try{const blob=await certPDF(s,c,r.cert);
+        await d.save({filename:`Certificate ${r.cert.no} - ${s.name}.pdf`,data:blob});toast("Certificate saved")}
+      catch(e){if(e&&e.code==="declined"){}else if(e&&e.code==="rate_limited")toast("Another download is waiting. Try again in a moment.");else toast("The certificate couldn't be downloaded here.")}
+      dl.disabled=false;dl.textContent="Download certificate (PDF)"}});
+}
+let dlP=null;function getDownloads(){if(!dlP)dlP=(window.claude&&window.claude.use?window.claude.use("downloads"):Promise.resolve(null)).catch(()=>null);return dlP}
+const FW={"Helvetica": [278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556, 333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556, 556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 278, 333, 556, 556, 556, 556, 260, 556, 333, 737, 370, 556, 584, 333, 737, 333, 400, 584, 333, 333, 333, 556, 537, 278, 333, 333, 365, 556, 834, 834, 834, 611, 667, 667, 667, 667, 667, 667, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 500, 556, 556, 556, 556, 278, 278, 278, 278, 556, 556, 556, 556, 556, 556, 556, 584, 611, 556, 556, 556, 556, 500, 556, 500], "Helvetica-Bold": [278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611, 975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556, 333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611, 611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 761, 278, 333, 556, 556, 556, 556, 280, 556, 333, 737, 370, 556, 584, 333, 737, 333, 400, 584, 333, 333, 333, 611, 556, 278, 333, 333, 365, 556, 834, 834, 834, 611, 722, 722, 722, 722, 722, 722, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 556, 556, 556, 556, 556, 278, 278, 278, 278, 611, 611, 611, 611, 611, 611, 611, 584, 611, 611, 611, 611, 611, 556, 611, 556]};
+function tw(t,f,size){const w=FW[f];let n=0;for(const ch of t){const c=ch.charCodeAt(0);n+=(c>=32&&c<256?w[c-32]:556)}return n*size/1000}
+function pdfStr(t){let o="";for(const ch of t){let c=ch.charCodeAt(0);if(c===8217||c===8216)c=39;else if(c===8220||c===8221)c=34;else if(c===8212||c===8211)c=45;else if(c>255)c=63;const x=String.fromCharCode(c);o+=(x==="\\"||x==="("||x===")")?"\\"+x:x}return o}
+function wrapText(t,f,size,max){const words=t.split(" ");const lines=[];let cur="";for(const w of words){const n=cur?cur+" "+w:w;if(tw(n,f,size)>max&&cur){lines.push(cur);cur=w}else cur=n}if(cur)lines.push(cur);return lines}
+async function certPDF(s,c,cert){
+  const W=792,H=612;const ops=[];const rgb=(a)=>a.map(v=>(v/255).toFixed(3)).join(" ");
+  const P=[107,63,122],INK=[34,29,39],MUT=[103,95,110],LN=[226,220,231];
+  const rect=(x,y,w,h,col,lw)=>ops.push(`${rgb(col)} RG ${lw} w ${x} ${H-y-h} ${w} ${h} re S`);
+  const line=(x1,y1,x2,y2,col,lw)=>ops.push(`${rgb(col)} RG ${lw} w ${x1} ${H-y1} m ${x2} ${H-y2} l S`);
+  const text=(t,cx,y,size,bold,col)=>{const f=bold?"Helvetica-Bold":"Helvetica";const x=cx-tw(t,f,size)/2;ops.push(`BT /${bold?"F2":"F1"} ${size} Tf ${rgb(col)} rg ${x.toFixed(2)} ${(H-y).toFixed(2)} Td (${pdfStr(t)}) Tj ET`)};
+  const ctr=(t,y,size,bold,col)=>{const ls=wrapText(t,bold?"Helvetica-Bold":"Helvetica",size,W-180);ls.forEach((l,i)=>text(l,W/2,y+i*size*1.2,size,bold,col||INK));return y+(ls.length-1)*size*1.2};
+  rect(28,28,W-56,H-56,P,3);rect(38,38,W-76,H-76,P,1);
+  ctr("CERTIFICATE OF COMPLETION",108,13,true,MUT);
+  ctr("Laugh & Live, LLC certifies that",158,14,false);
+  ctr(s.name,212,34,true,P);
+  ctr("has successfully completed",252,14,false);
+  let y=ctr(c.title,296,21,true);
+  const cols=[["Completion date",fmt(cert.date)],["Score",cert.score+"%"],["Required time",c.minutes+" minutes"],["Certificate no.",cert.no],["Valid through",fmt(expires(cert))]];
+  const top=Math.max(392,y+60);const cw=(W-160)/cols.length;
+  cols.forEach(([k,v],i)=>{const x=80+cw*i+cw/2;line(80+cw*i+8,top,80+cw*(i+1)-8,top,LN,1);text(k.toUpperCase(),x,top+16,8.5,false,MUT);text(v,x,top+34,12,false,INK)});
+  line(W/2-140,505,W/2+140,505,INK,0.75);
+  ctr("LaWanda Jones, MSW, QDDP \u00b7 Program Director",522,11,false);
+  ctr("Powered by Byte of Wisdom",H-52,8,false,[150,143,156]);
+  const stream=ops.join("\n");
+  const objs=["<< /Type /Catalog /Pages 2 0 R >>","<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+   `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>`,
+   `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+   "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+   "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+   `<< /Title (${pdfStr("Certificate "+cert.no)}) /Producer (Byte of Wisdom) >>`];
+  let out="%PDF-1.4\n";const offs=[];
+  objs.forEach((o,i)=>{offs.push(out.length);out+=`${i+1} 0 obj\n${o}\nendobj\n`});
+  const xref=out.length;out+=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`+offs.map(o=>String(o).padStart(10,"0")+" 00000 n \n").join("");
+  out+=`trailer\n<< /Size ${objs.length+1} /Root 1 0 R /Info 7 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  const bytes=new Uint8Array(out.length);for(let i=0;i<out.length;i++)bytes[i]=out.charCodeAt(i)&255;
+  return new Blob([bytes],{type:"application/pdf"});
+}
+
+function renderAdmin(){
+  const tab=view.tab||"board";
+  let all=[];S.staff.forEach(s=>COURSES.forEach(c=>all.push(status(s.id,c.id))));
+  const count=k=>all.filter(x=>k.includes(x.k)).length;
+  const tiles=`<div class="tiles">
+   <div class="tile"><b>${count(["Completed","Renewal due soon"])}</b><span>Completed and current</span></div>
+   <div class="tile"><b>${count(["Not started","In progress","Retake needed"])}</b><span>Assigned, not finished</span></div>
+   <div class="tile ${count(["Overdue","Expired"])?"alert":""}"><b>${count(["Overdue","Expired"])}</b><span>Overdue or expired</span></div>
+   <div class="tile ${count(["Locked: needs reset"])?"alert":""}"><b>${count(["Locked: needs reset"])}</b><span>Locked after ${MAX_ATTEMPTS} failed attempts</span></div>
+   <div class="tile"><b>${count(["Renewal due soon"])}</b><span>Renewals due in 30 days</span></div></div>`;
+  const tabs=`<div class="tabs" role="tablist">${[["board","Training status"],["person","Employee record"],["staff","Employees"],["courses","Course library"],["mail","Email log"]].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" data-tab="${k}">${l}</button>`).join("")}</div>`;
+  let body="";
+  if(tab==="board"){
+    body=`<div class="tablewrap"><table class="board"><thead><tr><th>Employee</th>${COURSES.map(c=>`<th>${esc(c.short)}</th>`).join("")}</tr></thead><tbody>
+    ${S.staff.map(s=>`<tr><td><b>${esc(s.name)}</b><span class="sub">${esc(s.role)}</span><span class="sub">Orientation due ${fmt(iso(addBiz(new Date(s.hire+"T00:00:00"),15)))}</span></td>
+     ${COURSES.map(c=>{const st=status(s.id,c.id),r=st.r;return `<td><span class="chip ${st.cls}">${st.k}</span>
+       <span class="sub">${r.cert?`Score ${r.cert.score}% · ${fmt(r.cert.date)}`:`Due ${fmt(r.due)} · ${Math.round(Math.min(r.watched,c.minutes))} of ${c.minutes} min done`}</span>
+       ${r.attempts.length&&!r.cert?`<span class="sub">Attempts: ${r.attempts.map(a=>a.score+"%").join(", ")}</span>`:""}
+       ${st.k.startsWith("Locked")?`<button class="linkbtn small" data-unlock="${s.id}|${c.id}">Reset attempts</button>`:""}</td>`}).join("")}</tr>`).join("")}
+    </tbody></table></div>`;
+  } else if(tab==="person"){
+    const sid=view.sid||S.staff[0].id, s=S.staff.find(x=>x.id===sid);
+    const orient=iso(addBiz(new Date(s.hire+"T00:00:00"),15));
+    const orientDone=COURSES.filter(c=>c.orientation).every(c=>S.rec[sid+"|"+c.id].cert);
+    body=`<div class="row" style="margin-bottom:14px"><label class="small muted" for="pick">Employee</label><select id="pick">${S.staff.map(x=>`<option value="${x.id}" ${x.id===sid?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div>
+    <div class="panel" style="margin-top:0"><div class="section-head" style="margin-bottom:8px"><h2>Training record: ${esc(s.name)}</h2>${(()=>{const newHire=(today-new Date(s.hire+"T00:00:00"))/864e5<60;
+      if(newHire||!orientDone&&false)return `<span class="chip ${orientDone?"c-good":(orient<iso(today)?"c-bad":"c-warn")}">Orientation ${orientDone?"complete":(orient<iso(today)?"past due":"due "+fmt(orient))}</span>`;
+      const bad=COURSES.filter(c=>["Overdue","Expired","Locked: needs reset"].includes(status(sid,c.id).k)).length;
+      return bad?`<span class="chip c-bad">${bad} training${bad>1?"s":""} need${bad>1?"":"s"} attention</span>`:`<span class="chip c-good">All trainings current</span>`})()}</div>
+     <p class="small muted" style="margin:0 0 12px">${esc(s.role)} · Hired ${fmt(s.hire)} · Personal email <span class="mono">${esc(s.email)}</span></p>
+     <div class="tablewrap"><table><thead><tr><th>Training</th><th>Status</th><th>Completed</th><th>Score</th><th>Attempts</th><th>Certificate</th><th>Renew by</th></tr></thead><tbody>
+     ${COURSES.map(c=>{const st=status(sid,c.id),r=st.r;return `<tr><td>${esc(c.short)}</td><td><span class="chip ${st.cls}">${st.k}</span></td><td>${r.cert?fmt(r.cert.date):"—"}</td><td>${r.cert?r.cert.score+"%":"—"}</td><td>${r.attempts.length?r.attempts.map(a=>a.score+"%").join(", "):"—"}</td><td>${r.cert?`<button class="linkbtn mono" data-view="${c.id}">${r.cert.no}</button>`:"—"}</td><td>${r.cert?fmt(expires(r.cert)):"—"}</td></tr>`}).join("")}
+     </tbody></table></div>
+     <p class="small muted" style="margin:12px 0 0">This record is the inspection view: one page per employee showing every required training, dates, scores, and certificates.</p></div>`;
+  } else if(tab==="staff"){
+    body=`<div class="panel" style="margin-top:0"><h2 style="margin-bottom:12px">Add an employee</h2>
+     <form id="addf" class="form" novalidate>
+      <label>Full name<input name="name" autocomplete="off" required></label>
+      <label>Role<select name="role"><option>Direct Support Professional</option><option>Counselor</option><option>Program Manager</option><option>QDDP</option><option>Other</option></select></label>
+      <label>Personal email<input name="email" type="email" autocomplete="off"></label>
+      <label>Hire date<input name="hire" type="date" value="${iso(today)}" required></label>
+      <div><button class="btn primary" type="submit">Add employee</button></div></form>
+     <p class="err" id="adderr" hidden></p>
+     <p class="small muted" style="margin:12px 0 0">New employees are assigned all ${COURSES.length} required trainings. Orientation is due within 15 business days of hire.</p></div>
+     <div class="tablewrap" style="margin-top:16px"><table><thead><tr><th>Employee</th><th>Role</th><th>Hired</th><th>Email</th><th>Completed</th><th>Needs attention</th></tr></thead><tbody>
+     ${S.staff.map(x=>{const st=COURSES.map(c=>status(x.id,c.id));const done=st.filter(t=>t.k==="Completed"||t.k==="Renewal due soon").length;const bad=st.filter(t=>["Overdue","Expired","Locked: needs reset"].includes(t.k)).length;
+       return `<tr><td><button class="linkbtn" data-rec="${x.id}">${esc(x.name)}</button></td><td>${esc(x.role)}</td><td>${fmt(x.hire)}</td><td class="mono small">${esc(x.email||"—")}</td><td>${done} of ${COURSES.length}</td><td>${bad?`<span class="chip c-bad">${bad}</span>`:"—"}</td></tr>`}).join("")}
+     </tbody></table></div>`;
+  } else if(tab==="courses"){
+    body=`<div class="cat">${COURSES.map(c=>`<div class="card">${thumb(c,"cimg")}<div><h3>${esc(c.title)}</h3>
+      <p class="small muted" style="margin:6px 0 0">${c.reg?esc(c.reg)+" · ":""}${c.slides?c.slides+" slides":"Slides needed"} · ${c.minutes} min required · ${c.qs.length} questions (${c.total} pts) · 80% to pass · renew yearly</p></div></div>`).join("")}</div>
+      <p class="small muted" style="margin:14px 0 0">Courses are built from Laugh &amp; Live's own training slides and tests.</p>`;
+  } else {
+    body=S.mail.length?`<div class="log">${S.mail.map(m=>`<div><b>${esc(m.subject)}</b> <span class="muted small">· ${esc(m.when)}</span><br>To <span class="mono">${esc(m.to)}</span> · Copy <span class="mono">${esc(m.cc)}</span><br><span class="muted">${esc(m.body)}</span></div>`).join("")}</div>`
+      :`<div class="panel" style="margin-top:0"><p style="margin:0">No certificate emails yet. Pass a test as an employee and the email appears here, addressed to the employee with a copy to <span class="mono">${AGENCY_EMAIL}</span>.</p></div>`;
+  }
+  app.innerHTML=`<div class="section-head"><h1>Training administration</h1><span class="small muted">As of ${fmt(iso(today))}</span></div>${tiles}${tabs}${body}`;
+  app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>go({name:"admin",tab:b.dataset.tab,sid:view.sid}));
+  app.querySelectorAll("[data-unlock]").forEach(b=>b.onclick=()=>{S.rec[b.dataset.unlock].attempts=[];save();toast("Attempts reset. The employee can retake the test.");render()});
+  app.querySelectorAll("[data-rec]").forEach(b=>b.onclick=()=>go({name:"admin",tab:"person",sid:b.dataset.rec}));
+  const addf=document.getElementById("addf");
+  if(addf)addf.onsubmit=e=>{e.preventDefault();const fd=new FormData(addf);const err=document.getElementById("adderr");
+    const name=String(fd.get("name")||"").trim(),email=String(fd.get("email")||"").trim(),hire=String(fd.get("hire")||"");
+    const bad=!name?"Enter the employee's name.":(!hire?"Enter a hire date.":(email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)?"Check the email address.":""));
+    if(bad){err.textContent=bad;err.hidden=false;return}
+    const id="e"+Date.now().toString(36);const hd=new Date(hire+"T00:00:00");const recent=(today-hd)/864e5<60;
+    S.staff.push({id,name,role:String(fd.get("role")),email,hire});
+    COURSES.forEach(c=>{S.rec[id+"|"+c.id]={assigned:iso(today),due:recent?iso(addBiz(hd,15)):iso(addDays(today,30)),watched:0,attempts:[],cert:null}});
+    save();toast(`${name} added and assigned ${COURSES.length} trainings`);go({name:"admin",tab:"staff"})};
+  const pick=document.getElementById("pick");if(pick)pick.onchange=()=>go({name:"admin",tab:"person",sid:pick.value});
+  app.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>go({name:"cert",cid:b.dataset.view,sid:view.sid||S.staff[0].id}));
+}
+
+fillWho();render();
+})();
+</script>
+</body></html>
