@@ -311,8 +311,9 @@ function speakText(text){stopSpeech();if(!soundOn||!text||!canSpeak)return;const
   const next=()=>{if(run!==speechRun)return;if(i>=parts.length){speaking=false;return}
     const sentence=parts[i++].trim(),u=new SpeechSynthesisUtterance(sentence);if(voice)u.voice=voice;u.rate=1;let fin=false;
     const finish=()=>{if(!fin){fin=true;next()}};u.onend=finish;u.onerror=()=>{fin=true;if(run===speechRun)speaking=false};
-    setTimeout(finish,2500+sentence.split(/\s+/).length*600);speechSynthesis.speak(u)};
-  next()}
+    setTimeout(finish,2500+sentence.split(/\s+/).length*600);speechSynthesis.resume();speechSynthesis.speak(u)};
+  // Chrome drops a reading that starts right after cancel(), so wait a moment first.
+  setTimeout(()=>{if(run===speechRun)next()},150)}
 if(canSpeak&&speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=()=>{};
 
 function renderCourse(){
