@@ -89,6 +89,7 @@ select{border:1px solid var(--line);background:var(--surface);border-radius:8px;
 .track{position:relative;flex:1;height:10px;border-radius:6px;background:rgba(255,255,255,.14);cursor:pointer;min-width:0}
 .track .seen{position:absolute;inset:0 auto 0 0;background:rgba(255,255,255,.28);border-radius:6px}
 .track .pos{position:absolute;inset:0 auto 0 0;background:#d7b4ea;border-radius:6px}
+.voice{display:flex;align-items:center;gap:8px;margin-top:10px}.voice select{font-size:.85rem;padding:4px 8px}.voice[hidden]{display:none}
 .bar .sound{border:1px solid rgba(255,255,255,.35);background:transparent;color:var(--screen-ink);border-radius:999px;padding:6px 12px;font-size:.82rem;font-weight:600;white-space:nowrap}
 .bar .t{font-family:var(--f-mono);font-size:.8rem;white-space:nowrap;font-variant-numeric:tabular-nums}
 .watch{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:14px}
@@ -304,17 +305,50 @@ function renderList(){
 const canSpeak=("speechSynthesis" in window);
 let soundOn=canSpeak; try{if(localStorage.getItem("ll-sound")==="off")soundOn=false}catch(e){}
 let speechRun=0, speaking=false;
-function pickVoice(){const v=speechSynthesis.getVoices().filter(x=>/^en(-|_)US/i.test(x.lang));const good=/natural|online|aria|jenny|samantha|google us english/i;return v.find(x=>good.test(x.name))||v[0]||null}
+// Make slide text sound natural when read aloud.
+const KEEP_CAPS = /^(PPE|HCBS|DBHDS|ISP|CHRIS|DSP|DSPS|QDDP|EPA|COVID|RSV|AED|CPR|RCA|ID|US|DD|IDD|HIPAA|OK|IT|POC|ADA|CDC|DMAS)$/;
+function speakable(t) {
+  return t
+    .replace(/(\d+)\s?VAC\s?(\d+)-(\d+)-(\d+)/g, "$1 V A C $2, $3, $4")
+    .replace(/\bLLC\b/g, "L L C")
+    .replace(/\be\.g\.,?/gi, "for example,").replace(/\bi\.e\.,?/gi, "that is,")
+    .replace(/°F/g, " degrees").replace(/%/g, " percent")
+    .replace(/\s*&\s*/g, " and ")
+    .replace(/([A-Za-z])\/([A-Za-z])/g, "$1 or $2")
+    .replace(/\s*[—–]\s*/g, ", ")
+    .replace(/[()]/g, ", ")
+    .replace(/["“”]/g, "")
+    .replace(/\b[A-Z][A-Z'’]+\b/g, (w) => (KEEP_CAPS.test(w.replace(/['’]S$/, "")) ? w : w.charAt(0) + w.slice(1).toLowerCase()))
+    .replace(/\s+,/g, ",").replace(/,(\s*,)+/g, ",").replace(/,\s*\./g, ".").replace(/\s{2,}/g, " ").trim();
+}
+// Best-sounding voices first: Microsoft "Natural"/"Online" voices (Edge), Google's (Chrome), Apple's (Safari).
+function rankVoice(v) {
+  const n = v.name;
+  if (/natural/i.test(n)) return 0;
+  if (/online/i.test(n)) return 1;
+  if (/google us english/i.test(n)) return 2;
+  if (/samantha|ava|allison|aria|jenny|guy|zoe|evan/i.test(n)) return 3;
+  if (/google/i.test(n)) return 4;
+  return 5;
+}
+function englishVoices() {
+  return speechSynthesis.getVoices().filter((v) => /^en(-|_)(US|GB|CA|AU)/i.test(v.lang))
+    .sort((a, b) => rankVoice(a) - rankVoice(b) || (/US/i.test(b.lang) - /US/i.test(a.lang)) || a.name.localeCompare(b.name));
+}
+let voiceName=null;try{voiceName=localStorage.getItem("ll-voice")}catch(e){}
+function pickVoice(){const v=englishVoices();return v.find(x=>x.name===voiceName)||v[0]||null}
+function fillVoices(sel){if(!sel||!canSpeak)return;const v=englishVoices();if(!v.length){sel.closest(".voice").hidden=true;return}
+  const cur=pickVoice();sel.innerHTML=v.map(x=>`<option value="${esc(x.name)}"${cur&&x.name===cur.name?" selected":""}>${esc(x.name.replace(/^Microsoft /,"").replace(/ - English.*$/,""))}</option>`).join("");sel.closest(".voice").hidden=false}
 function stopSpeech(){speechRun++;speaking=false;if(canSpeak)speechSynthesis.cancel()}
 function speakText(text){stopSpeech();if(!soundOn||!text||!canSpeak)return;const run=speechRun,voice=pickVoice();
-  const parts=text.match(/[^.!?]+[.!?]+["')\]]*|\S[^.!?]*$/g)||[text];speaking=true;let i=0;
+  text=speakable(text);const parts=text.match(/[^.!?]+[.!?]+["')\]]*|\S[^.!?]*$/g)||[text];speaking=true;let i=0;
   const next=()=>{if(run!==speechRun)return;if(i>=parts.length){speaking=false;return}
-    const sentence=parts[i++].trim(),u=new SpeechSynthesisUtterance(sentence);if(voice)u.voice=voice;u.rate=1;let fin=false;
+    const sentence=parts[i++].trim(),u=new SpeechSynthesisUtterance(sentence);if(voice){u.voice=voice;u.lang=voice.lang}u.rate=0.95;let fin=false;
     const finish=()=>{if(!fin){fin=true;next()}};u.onend=finish;u.onerror=()=>{fin=true;if(run===speechRun)speaking=false};
     setTimeout(finish,2500+sentence.split(/\s+/).length*600);speechSynthesis.resume();speechSynthesis.speak(u)};
   // Chrome drops a reading that starts right after cancel(), so wait a moment first.
   setTimeout(()=>{if(run===speechRun)next()},150)}
-if(canSpeak&&speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=()=>{};
+if(canSpeak&&speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=()=>fillVoices(document.getElementById("voicepick"));
 
 function renderCourse(){
   const c=COURSES.find(x=>x.id===view.cid), r=S.rec[who+"|"+c.id];
@@ -326,6 +360,7 @@ function renderCourse(){
    <div class="bar"><button class="play" id="play" aria-label="Play">▶</button>${canSpeak&&c.nar&&c.nar.some(Boolean)?`<button class="sound" id="sound" aria-pressed="${soundOn}">${soundOn?"🔊 Sound on":"🔇 Sound off"}</button>`:""}
     <div class="track" id="track" role="slider" aria-label="Lesson position" tabindex="0"><div class="seen" id="seen"></div><div class="pos" id="pos"></div></div>
     <span class="t" id="time"></span></div></div>
+  ${canSpeak&&c.nar&&c.nar.some(Boolean)?`<label class="voice small muted" hidden>Voice <select id="voicepick"></select></label>`:""}
   <div class="watch"><div class="stat"><span>Time completed</span><b id="w"></b></div><div class="stat"><span>Required</span><b>${mmss(c.minutes)}</b></div><div class="stat"><span>Test</span><b id="lock"></b></div></div>
   <div class="panel"><div class="row" style="justify-content:space-between"><p class="small muted" style="margin:0;max-width:56ch">Time only counts while the lesson plays on this screen. Switching tabs pauses it. You can go back, but you can't skip ahead of what you've completed.</p>
   <div class="row"><button class="btn demo" id="skip">Skip to end (demo only)</button><button class="btn primary" id="take" disabled>Take the test</button></div></div></div>`;
@@ -353,6 +388,7 @@ function renderCourse(){
     if(view.pos>=c.minutes){playing=false;stopTimer();toast("Lesson complete. The test is unlocked.")}
     save();paint();}
   $("play").onclick=()=>{playing=!playing;if(playing){if(view.pos>=c.minutes)view.pos=0;timer=timer||setInterval(tick,250);paint();if(c.slides)speakText(c.nar&&c.nar[shown])}else{stopTimer();stopSpeech();paint()}};
+  const vp=$("voicepick");fillVoices(vp);if(vp)vp.onchange=()=>{voiceName=vp.value;try{localStorage.setItem("ll-voice",voiceName)}catch(e){}speakText(c.nar&&c.nar[Math.max(shown,0)])};
   const snd=$("sound");if(snd)snd.onclick=()=>{soundOn=!soundOn;try{localStorage.setItem("ll-sound",soundOn?"on":"off")}catch(e){}
     snd.setAttribute("aria-pressed",soundOn);snd.textContent=soundOn?"🔊 Sound on":"🔇 Sound off";if(soundOn&&playing)speakText(c.nar&&c.nar[shown]);else stopSpeech()};
   $("track").onclick=e=>{const rc=e.currentTarget.getBoundingClientRect();const want=(e.clientX-rc.left)/rc.width*c.minutes;
