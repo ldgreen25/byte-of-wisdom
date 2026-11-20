@@ -468,14 +468,10 @@ function renderSign(){
    <form id="sf" class="signf" novalidate>
     <label class="chk"><input type="checkbox" name="agree"> I agree to the statement above.</label>
     <label>Type your full name to sign<input name="name" autocomplete="off" placeholder="${esc(s.name)}"></label>
-    <p class="small muted" style="margin:0">Your typed name, the date and time, and the device you used are saved with your certificate.</p>
+    <p class="small muted" style="margin:0">Your typed name, the date and time, and the device you used are saved with your certificate. Questions? Ask your supervisor before you sign.</p>
     <p class="err" id="serr" hidden></p>
     <div><button class="btn primary" type="submit">Sign and get my certificate</button></div></form>
-   ${q?"":`<details class="ask"><summary>I have a question first</summary><form id="qf" class="signf" novalidate>
-    <label>Your question for your supervisor<textarea name="q" rows="3"></textarea></label>
-    <p class="small muted" style="margin:0">Your supervisor gets an email. Your certificate waits until they answer, and you won&rsquo;t need to take the test again.</p>
-    <p class="err" id="qerr" hidden></p>
-    <div><button class="btn" type="submit">Send my question</button></div></form></details>`}</div>`}`;
+</div>`}`;
   document.getElementById("back").onclick=()=>go({name:"list"});
   const sf=document.getElementById("sf");
   if(sf)sf.onsubmit=e=>{e.preventDefault();const fd=new FormData(sf),err=document.getElementById("serr");
@@ -489,12 +485,6 @@ function renderSign(){
     delete r.pending;
     S.mail.unshift({when:now.toLocaleString("en-US"),to:s.email,cc:AGENCY_EMAIL,subject:`Certificate: ${c.title}`,body:`${s.name} passed with ${p.score}% (${p.pts} of ${c.total} points) and signed off. Certificate ${r.cert.no} attached.`});
     save();go({name:"cert",cid:c.id,sid:who,fresh:true,pts:p.pts})};
-  const qf=document.getElementById("qf");
-  if(qf)qf.onsubmit=e=>{e.preventDefault();const text=String(new FormData(qf).get("q")||"").trim(),err=document.getElementById("qerr");
-    if(!text){err.textContent="Type your question first.";err.hidden=false;return}
-    r.question={q:text,asked:iso(today)};
-    S.mail.unshift({when:new Date().toLocaleString("en-US"),to:"Supervisors",cc:"—",subject:`Training question from ${s.name}`,body:`${c.short}: "${text}" The certificate is on hold until a supervisor answers.`});
-    save();toast("Question sent to your supervisor");render()};
 }
 
 function certHTML(s,c,cert){return `<div class="cert"><div class="cert-in">
