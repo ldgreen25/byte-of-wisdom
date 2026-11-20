@@ -158,6 +158,15 @@ table.board th:first-child{background:var(--sunk)}
 .form label{display:grid;gap:4px;font-size:.82rem;color:var(--muted);font-weight:600}
 .form input,.form select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;font-size:.95rem;color:var(--ink);width:100%}
 .err{color:var(--bad);font-size:.85rem;margin:8px 0 0}
+.statement{font-size:1.05rem;line-height:1.55;border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 16px}
+.signf{display:grid;gap:12px;max-width:520px}
+.signf label{display:grid;gap:4px;font-size:.82rem;color:var(--muted);font-weight:600}
+.signf input:not([type=checkbox]),.signf textarea,.qbox textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;font:inherit;font-size:.95rem;color:var(--ink);width:100%}
+.signf label.chk{display:flex;gap:10px;align-items:center;font-size:.95rem;color:var(--ink)}
+.chk input{width:20px;height:20px;accent-color:var(--accent);flex:none}
+.quote{margin:6px 0;padding:8px 12px;background:var(--sunk);border-radius:8px}
+.ask{margin-top:18px}.ask summary{cursor:pointer;color:var(--accent);font-weight:600}.ask form{margin-top:10px}
+.qbox{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;padding:12px 14px;margin:0 0 14px}
 .foot{margin-top:36px;font-size:.78rem;color:var(--muted);text-align:center}
 @media (prefers-reduced-motion:no-preference){.track .pos{transition:width .2s linear}}
 </style></head><body>
@@ -242,6 +251,7 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const expires=c=>c?iso(addDays(new Date(c.date+"T00:00:00"),365)):null;
 function status(sid,cid){
   const r=S.rec[sid+"|"+cid];
+  if(r.pending)return r.question&&!r.question.a?{k:"Question for supervisor",cls:"c-warn",r}:{k:"Needs sign-off",cls:"c-acc",r};
   if(r.cert){const ex=expires(r.cert);const left=(new Date(ex+"T00:00:00")-today)/864e5;
     if(left<0)return{k:"Expired",cls:"c-bad",r};
     if(left<=30)return{k:"Renewal due soon",cls:"c-warn",r};
@@ -280,6 +290,7 @@ function render(){
   if(view.name==="course")return renderCourse();
   if(view.name==="quiz")return renderQuiz();
   if(view.name==="cert")return renderCert();
+  if(view.name==="sign")return renderSign();
   if(view.name==="admin")return renderAdmin();
 }
 
@@ -289,7 +300,7 @@ function renderList(){
   const mine=reqCourses(s);
   const items=mine.map(c=>{const st=status(s.id,c.id);const r=st.r;
     const locked=!r.cert&&r.attempts.length>=MAX_ATTEMPTS;
-    const action=r.cert?`<button class="btn" data-cert="${c.id}">View certificate</button>`:(locked?`<button class="btn" disabled>Ask your supervisor</button>`:`<button class="btn primary" data-open="${c.id}">${r.watched>0?"Continue":"Start"}</button>`);
+    const action=r.pending?`<button class="btn${st.k==="Needs sign-off"?" primary":""}" data-sign="${c.id}">${st.k==="Needs sign-off"?"Sign off":"See my question"}</button>`:r.cert?`<button class="btn" data-cert="${c.id}">View certificate</button>`:(locked?`<button class="btn" disabled>Ask your supervisor</button>`:`<button class="btn primary" data-open="${c.id}">${r.watched>0?"Continue":"Start"}</button>`);
     const due=r.cert?`Renew by ${fmt(expires(r.cert))}`:`Due ${fmt(r.due)}`;
     return `<div class="course">${thumb(c,"thumb")}<div><div class="row" style="gap:8px 12px"><h3>${esc(c.title)}</h3><span class="chip ${st.cls}">${st.k}</span></div>
     <div class="meta"><span>${c.minutes} min · ${c.slides?c.slides+" slides":"slides not uploaded yet"} · ${c.qs.length}-question test</span><span>${due}</span>${r.attempts.length&&!r.cert?`<span>Attempts ${r.attempts.length} of ${MAX_ATTEMPTS}</span>`:""}${r.cert?`<span>Score ${r.cert.score}%</span>`:""}</div></div>
@@ -298,6 +309,7 @@ function renderList(){
   <p class="small muted" style="margin:0">Orientation due within 15 business days of hire: <b class="mono">${fmt(iso(orient))}</b></p></div>
   <div class="list">${items}</div>`;
   app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>go({name:"course",cid:b.dataset.open}));
+  app.querySelectorAll("[data-sign]").forEach(b=>b.onclick=()=>go({name:"sign",cid:b.dataset.sign}));
   app.querySelectorAll("[data-cert]").forEach(b=>b.onclick=()=>go({name:"cert",cid:b.dataset.cert,sid:who}));
 }
 
@@ -424,9 +436,8 @@ function renderQuiz(){
     let pts=0;c.qs.forEach((q,i)=>{if(Number(fd.get("q"+i))===q.a)pts+=q.p});
     const score=Math.round(pts/c.total*100);r.attempts.push({date:iso(today),score,pts});
     const s=S.staff.find(x=>x.id===who);
-    if(pts/c.total>=PASS){r.cert={no:certNo(S),date:iso(today),score};
-      S.mail.unshift({when:new Date().toLocaleString("en-US"),to:s.email,cc:AGENCY_EMAIL,subject:`Certificate: ${c.title}`,body:`${s.name} passed with ${score}% (${pts} of ${c.total} points). Certificate ${r.cert.no} attached.`});
-      save();go({name:"cert",cid:c.id,sid:who,fresh:true,pts});return}
+    if(pts/c.total>=PASS){r.pending={date:iso(today),score,pts};delete r.question;
+      save();go({name:"sign",cid:c.id});return}
     save();
     const left=MAX_ATTEMPTS-r.attempts.length;
     app.insertAdjacentHTML("beforeend",`<div class="result fail" role="status"><h2>Score: ${score}% (${pts} of ${c.total} points)</h2><p style="margin:6px 0 12px">You need 80% to pass. ${left>0?`You have ${left} attempt${left>1?"s":""} left. Questions will be reshuffled.`:"You've used all attempts. Your supervisor will review and reset the test."}</p>
@@ -439,10 +450,58 @@ function renderQuiz(){
   };
 }
 
+const STATEMENT=c=>`I completed ${c.title}. The material was explained to me, I had the chance to ask questions, and I understand I'm expected to follow Laugh & Live, LLC's policies on this topic.`;
+const plainName=t=>t.trim().replace(/\s+/g," ").toLowerCase();
+const signedLine=cert=>cert&&cert.signed?`Acknowledged by ${cert.signed.name} on ${cert.signed.at}`:"";
+function renderSign(){
+  const c=COURSES.find(x=>x.id===view.cid), s=staffOf(who), r=S.rec[who+"|"+c.id];
+  if(!r.pending)return go({name:"list"});
+  const q=r.question, waiting=q&&!q.a;
+  app.innerHTML=`<button class="btn back" id="back">← My trainings</button>
+  <div class="result pass" role="status" style="margin:0 0 16px"><h2>You passed ${esc(c.short)} with ${r.pending.score}% (${r.pending.pts} of ${c.total} points)</h2><p style="margin:6px 0 0">One last step before your certificate.</p></div>
+  ${waiting?`<div class="panel" style="margin-top:0"><h2 style="margin:0 0 8px">Waiting on your supervisor</h2><p class="small muted" style="margin:0">You asked:</p><div class="quote">${esc(q.q)}</div>
+    <p style="margin:10px 0 0">Your supervisor got an email. When they answer, you&rsquo;ll get an email too, and you can sign off here.</p>
+    <p class="small muted" style="margin:8px 0 0">Demo: switch to Admin, open this person&rsquo;s Employee record, and answer the question.</p></div>`
+  :`<div class="panel" style="margin-top:0">${q?`<p class="small muted" style="margin:0">Your question:</p><div class="quote">${esc(q.q)}</div><p class="small muted" style="margin:8px 0 0">Your supervisor answered:</p><div class="quote">${esc(q.a)}</div>`:""}
+   <h2 style="margin:${q?"18px":"0"} 0 10px">Staff acknowledgment</h2>
+   <p class="statement">${esc(STATEMENT(c))}</p>
+   <form id="sf" class="signf" novalidate>
+    <label class="chk"><input type="checkbox" name="agree"> I agree to the statement above.</label>
+    <label>Type your full name to sign<input name="name" autocomplete="off" placeholder="${esc(s.name)}"></label>
+    <p class="small muted" style="margin:0">Your typed name, the date and time, and the device you used are saved with your certificate.</p>
+    <p class="err" id="serr" hidden></p>
+    <div><button class="btn primary" type="submit">Sign and get my certificate</button></div></form>
+   ${q?"":`<details class="ask"><summary>I have a question first</summary><form id="qf" class="signf" novalidate>
+    <label>Your question for your supervisor<textarea name="q" rows="3"></textarea></label>
+    <p class="small muted" style="margin:0">Your supervisor gets an email. Your certificate waits until they answer, and you won&rsquo;t need to take the test again.</p>
+    <p class="err" id="qerr" hidden></p>
+    <div><button class="btn" type="submit">Send my question</button></div></form></details>`}</div>`}`;
+  document.getElementById("back").onclick=()=>go({name:"list"});
+  const sf=document.getElementById("sf");
+  if(sf)sf.onsubmit=e=>{e.preventDefault();const fd=new FormData(sf),err=document.getElementById("serr");
+    const typed=String(fd.get("name")||"");
+    if(!fd.get("agree")){err.textContent="Check the box to agree to the statement.";err.hidden=false;return}
+    if(plainName(typed)!==plainName(s.name)){err.textContent=`Type your full name as it's on file: ${s.name}`;err.hidden=false;return}
+    const now=new Date();
+    const at=`${fmt(iso(today))} at ${now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}`;
+    const p=r.pending;
+    r.cert={no:certNo(S),date:p.date,score:p.score,signed:{name:typed.trim().replace(/\s+/g," "),at,date:iso(today)}};
+    delete r.pending;
+    S.mail.unshift({when:now.toLocaleString("en-US"),to:s.email,cc:AGENCY_EMAIL,subject:`Certificate: ${c.title}`,body:`${s.name} passed with ${p.score}% (${p.pts} of ${c.total} points) and signed off. Certificate ${r.cert.no} attached.`});
+    save();go({name:"cert",cid:c.id,sid:who,fresh:true,pts:p.pts})};
+  const qf=document.getElementById("qf");
+  if(qf)qf.onsubmit=e=>{e.preventDefault();const text=String(new FormData(qf).get("q")||"").trim(),err=document.getElementById("qerr");
+    if(!text){err.textContent="Type your question first.";err.hidden=false;return}
+    r.question={q:text,asked:iso(today)};
+    S.mail.unshift({when:new Date().toLocaleString("en-US"),to:"Supervisors",cc:"—",subject:`Training question from ${s.name}`,body:`${c.short}: "${text}" The certificate is on hold until a supervisor answers.`});
+    save();toast("Question sent to your supervisor");render()};
+}
+
 function certHTML(s,c,cert){return `<div class="cert"><div class="cert-in">
   <span class="eyebrow">Certificate of completion</span><span class="muted">Laugh &amp; Live, LLC certifies that</span>
   <span class="name">${esc(s.name)}</span><span class="muted">has successfully completed</span><span class="course-t">${esc(c.title)}</span>
   <div class="cert-grid"><div><span>Completion date</span>${fmt(cert.date)}</div><div><span>Score</span>${cert.score}%</div><div><span>Required time</span>${c.minutes} minutes</div><div><span>Certificate no.</span><span class="mono" style="font-size:.9rem;letter-spacing:0;text-transform:none;color:var(--ink)">${cert.no}</span></div><div><span>Valid through</span>${fmt(expires(cert))}</div></div>
+  ${cert.signed?`<p class="small muted" style="margin:12px 0 0">${esc(signedLine(cert))}</p>`:""}
   <p class="small muted" style="margin:14px 0 0">LaWanda Jones, MSW, QDDP · Program Director</p></div></div>`}
 
 function renderCert(){
@@ -483,6 +542,7 @@ async function certPDF(s,c,cert){
   const cols=[["Completion date",fmt(cert.date)],["Score",cert.score+"%"],["Required time",c.minutes+" minutes"],["Certificate no.",cert.no],["Valid through",fmt(expires(cert))]];
   const top=Math.max(392,y+60);const cw=(W-160)/cols.length;
   cols.forEach(([k,v],i)=>{const x=80+cw*i+cw/2;line(80+cw*i+8,top,80+cw*(i+1)-8,top,LN,1);text(k.toUpperCase(),x,top+16,8.5,false,MUT);text(v,x,top+34,12,false,INK)});
+  if(cert.signed)ctr(signedLine(cert),top+66,9.5,false,MUT);
   line(W/2-140,505,W/2+140,505,INK,0.75);
   ctr("LaWanda Jones, MSW, QDDP \u00b7 Program Director",522,11,false);
   ctr("Powered by Byte of Wisdom",H-52,8,false,[150,143,156]);
@@ -507,7 +567,7 @@ function renderAdmin(){
   const count=k=>all.filter(x=>k.includes(x.k)).length;
   const tiles=`<div class="tiles">
    <div class="tile"><b>${count(["Completed","Renewal due soon"])}</b><span>Completed and current</span></div>
-   <div class="tile"><b>${count(["Not started","In progress","Retake needed"])}</b><span>Assigned, not finished</span></div>
+   <div class="tile"><b>${count(["Not started","In progress","Retake needed","Needs sign-off","Question for supervisor"])}</b><span>Assigned, not finished</span></div>
    <div class="tile ${count(["Overdue","Expired"])?"alert":""}"><b>${count(["Overdue","Expired"])}</b><span>Overdue or expired</span></div>
    <div class="tile ${count(["Locked: needs reset"])?"alert":""}"><b>${count(["Locked: needs reset"])}</b><span>Locked after ${MAX_ATTEMPTS} failed attempts</span></div>
    <div class="tile"><b>${count(["Renewal due soon"])}</b><span>Renewals due in 30 days</span></div></div>`;
@@ -531,10 +591,13 @@ function renderAdmin(){
       const bad=reqCourses(s).filter(c=>["Overdue","Expired","Locked: needs reset"].includes(status(sid,c.id).k)).length;
       return bad?`<span class="chip c-bad">${bad} training${bad>1?"s":""} need${bad>1?"":"s"} attention</span>`:`<span class="chip c-good">All trainings current</span>`})()}</div>
      <p class="small muted" style="margin:0 0 12px"><label>Role <select id="chrole" style="margin-left:4px">${Object.keys(S.roles).map(r=>`<option ${r===s.role?"selected":""}>${esc(r)}</option>`).join("")}</select></label> · ${reqCourses(s).length} required · Hired ${fmt(s.hire)} · Personal email <span class="mono">${esc(s.email)}</span></p>
-     <div class="tablewrap"><table><thead><tr><th>Training</th><th>Status</th><th>Completed</th><th>Score</th><th>Attempts</th><th>Certificate</th><th>Renew by</th></tr></thead><tbody>
-     ${reqCourses(s).map(c=>{const st=status(sid,c.id),r=st.r;return `<tr><td>${esc(c.short)}</td><td><span class="chip ${st.cls}">${st.k}</span></td><td>${r.cert?fmt(r.cert.date):"—"}</td><td>${r.cert?r.cert.score+"%":"—"}</td><td>${r.attempts.length?r.attempts.map(a=>a.score+"%").join(", "):"—"}</td><td>${r.cert?`<button class="linkbtn mono" data-view="${c.id}">${r.cert.no}</button>`:"—"}</td><td>${r.cert?fmt(expires(r.cert)):"—"}</td></tr>`}).join("")}
+     ${reqCourses(s).filter(c=>{const rr=S.rec[sid+"|"+c.id];return rr.pending&&rr.question&&!rr.question.a}).map(c=>`<div class="qbox"><p style="margin:0"><b>Question about ${esc(c.short)}</b> <span class="small muted">· asked ${fmt(S.rec[sid+"|"+c.id].question.asked)} · certificate on hold until you answer</span></p>
+       <div class="quote">${esc(S.rec[sid+"|"+c.id].question.q)}</div><textarea data-ans="${c.id}" rows="2" aria-label="Your answer" placeholder="Your answer"></textarea>
+       <div class="row" style="margin-top:8px"><button class="btn primary" data-sendans="${c.id}">Send answer</button></div></div>`).join("")}
+     <div class="tablewrap"><table><thead><tr><th>Training</th><th>Status</th><th>Completed</th><th>Score</th><th>Attempts</th><th>Certificate</th><th>Signed off</th><th>Renew by</th></tr></thead><tbody>
+     ${reqCourses(s).map(c=>{const st=status(sid,c.id),r=st.r;return `<tr><td>${esc(c.short)}</td><td><span class="chip ${st.cls}">${st.k}</span></td><td>${r.cert?fmt(r.cert.date):"—"}</td><td>${r.cert?r.cert.score+"%":"—"}</td><td>${r.attempts.length?r.attempts.map(a=>a.score+"%").join(", "):"—"}</td><td>${r.cert?`<button class="linkbtn mono" data-view="${c.id}">${r.cert.no}</button>`:"—"}</td><td>${r.cert?fmt(r.cert.signed?r.cert.signed.date:r.cert.date):"—"}</td><td>${r.cert?fmt(expires(r.cert)):"—"}</td></tr>`}).join("")}
      </tbody></table></div>
-     <p class="small muted" style="margin:12px 0 0">This record is the inspection view: one page per employee showing every required training, dates, scores, and certificates.</p></div>`;
+     <p class="small muted" style="margin:12px 0 0">This record is the inspection view: one page per employee showing every required training, dates, scores, certificates, and sign-offs.</p></div>`;
   } else if(tab==="staff"){
     body=`<div class="panel" style="margin-top:0"><h2 style="margin-bottom:12px">Add an employee</h2>
      <form id="addf" class="form" novalidate>
@@ -566,6 +629,11 @@ function renderAdmin(){
   }
   app.innerHTML=`<div class="section-head"><h1>Training administration</h1><span class="small muted">As of ${fmt(iso(today))}</span></div>${tiles}${tabs}${body}`;
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>go({name:"admin",tab:b.dataset.tab,sid:view.sid}));
+  app.querySelectorAll("[data-sendans]").forEach(b=>b.onclick=()=>{const cid=b.dataset.sendans,sid=view.sid||S.staff[0].id,rr=S.rec[sid+"|"+cid];
+    const ta=app.querySelector(`[data-ans="${cid}"]`);const a=ta.value.trim();if(!a){ta.focus();toast("Type your answer first");return}
+    rr.question.a=a;const x=staffOf(sid);
+    S.mail.unshift({when:new Date().toLocaleString("en-US"),to:x.email,cc:"—",subject:`Answer to your question: ${COURSES.find(c=>c.id===cid).title}`,body:`${a} You can now sign off and get your certificate.`});
+    save();toast(`Answer sent. ${x.name} can now sign off.`);render()});
   app.querySelectorAll("[data-unlock]").forEach(b=>b.onclick=()=>{S.rec[b.dataset.unlock].attempts=[];save();toast("Attempts reset. The employee can retake the test.");render()});
   app.querySelectorAll("[data-rc]").forEach(b=>b.onchange=()=>{const i=b.dataset.rc.lastIndexOf("|");const r=b.dataset.rc.slice(0,i),cid=b.dataset.rc.slice(i+1);const set=S.roles[r];
     if(b.checked){if(!set.includes(cid))set.push(cid);let n=0;S.staff.filter(x=>x.role===r).forEach(x=>{const rc=S.rec[x.id+"|"+cid];if(!rc.cert&&!rc.watched&&!rc.attempts.length){rc.assigned=iso(today);const hd=new Date(x.hire+"T00:00:00");rc.due=(today-hd)/864e5<60?iso(addBiz(hd,15)):iso(addDays(today,30))}n++});
