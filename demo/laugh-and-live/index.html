@@ -166,6 +166,7 @@ table.board th:first-child{background:var(--sunk)}
 .chk input{width:20px;height:20px;accent-color:var(--accent);flex:none}
 .quote{margin:6px 0;padding:8px 12px;background:var(--sunk);border-radius:8px}
 .ask{margin-top:18px}.ask summary{cursor:pointer;color:var(--accent);font-weight:600}.ask form{margin-top:10px}
+.wbox{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 16px;margin:0 0 16px}.wbox summary{cursor:pointer}
 .qbox{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;padding:12px 14px;margin:0 0 14px}
 .foot{margin-top:36px;font-size:.78rem;color:var(--muted);text-align:center}
 @media (prefers-reduced-motion:no-preference){.track .pos{transition:width .2s linear}}
@@ -291,28 +292,27 @@ function render(){
   if(view.name==="quiz")return renderQuiz();
   if(view.name==="cert")return renderCert();
   if(view.name==="sign")return renderSign();
-  if(view.name==="welcome")return renderWelcome();
   if(view.name==="admin")return renderAdmin();
 }
 
 const WELCOME_COUNT=14, WELCOME_TITLE="About Laugh & Live, LLC";
-function renderWelcome(){
-  const first=!(S.welcomed||{})[who], n=view.i||0, last=n===WELCOME_COUNT-1;
-  const finish=()=>{S.welcomed=S.welcomed||{};S.welcomed[who]=true;save();go({name:"list"})};
-  app.innerHTML=`${first?"":`<button class="btn back" id="back">← My trainings</button>`}
-  <div class="section-head"><div><h1>${first?"Welcome! ":""}${esc(WELCOME_TITLE)}</h1><p class="muted small" style="margin:4px 0 0">${first?"Before your trainings, take a few minutes to get to know us.":"You can look through these any time."}</p></div><span class="small muted">${n+1} of ${WELCOME_COUNT}</span></div>
-  <div class="stage" style="background:var(--screen);border-radius:12px;overflow:hidden;aspect-ratio:16/9"><img src="slides/welcome-${String(n+1).padStart(2,"0")}.jpg" alt="Slide ${n+1} of ${WELCOME_COUNT}" style="width:100%;height:100%;object-fit:contain;display:block"></div>
-  <div class="row" style="margin-top:14px"><button class="btn" id="wprev" ${n===0?"disabled":""}>← Back</button>
-   ${last?`<button class="btn primary" id="wdone">${first?"Go to my trainings":"Back to my trainings"}</button>`:`<button class="btn primary" id="wnext">Next →</button>`}
-   ${first&&!last?`<button class="linkbtn small" id="wskip">Skip for now</button>`:""}</div>`;
-  const b=document.getElementById("back");if(b)b.onclick=()=>go({name:"list"});
-  document.getElementById("wprev").onclick=()=>{view.i=n-1;render()};
-  const nx=document.getElementById("wnext");if(nx)nx.onclick=()=>{view.i=n+1;render()};
-  const dn=document.getElementById("wdone");if(dn)dn.onclick=finish;
-  const sk=document.getElementById("wskip");if(sk)sk.onclick=finish;
+function welcomeBox(){
+  const first=!(S.welcomed||{})[who], n=view.wi||0, last=n===WELCOME_COUNT-1;
+  const open=first||view.wopen;
+  return `<details class="wbox" id="wbox" ${open?"open":""}><summary><b>${first?"Welcome! ":""}${esc(WELCOME_TITLE)}</b> <span class="small muted">${WELCOME_COUNT} slides</span></summary>
+   ${first?`<p class="small muted" style="margin:4px 0 0">Before your trainings, take a few minutes to get to know us.</p>`:""}
+   <div style="background:var(--screen);border-radius:10px;overflow:hidden;aspect-ratio:16/9;margin:10px 0"><img src="slides/welcome-${String(n+1).padStart(2,"0")}.jpg" alt="Slide ${n+1} of ${WELCOME_COUNT}" style="width:100%;height:100%;object-fit:contain;display:block"></div>
+   <div class="row"><button class="btn" id="wprev" ${n===0?"disabled":""}>← Back</button><button class="btn primary" id="wnext" ${last?"disabled":""}>Next →</button><span class="small muted">${n+1} of ${WELCOME_COUNT}</span>
+   ${first?`<button class="btn${last?" primary":""}" id="wdone" style="margin-left:auto">Done</button>`:""}</div></details>`;
+}
+function wireWelcome(){
+  const box=document.getElementById("wbox");if(!box)return;
+  box.addEventListener("toggle",()=>{view.wopen=box.open});
+  document.getElementById("wprev").onclick=()=>{view.wi=(view.wi||0)-1;view.wopen=true;render()};
+  document.getElementById("wnext").onclick=()=>{view.wi=(view.wi||0)+1;view.wopen=true;render()};
+  const d=document.getElementById("wdone");if(d)d.onclick=()=>{S.welcomed=S.welcomed||{};S.welcomed[who]=true;view.wi=0;view.wopen=false;save();render()};
 }
 function renderList(){
-  if(!(S.welcomed||{})[who])return go({name:"welcome"});
   const s=S.staff.find(x=>x.id===who);
   const orient=addBiz(new Date(s.hire+"T00:00:00"),15);
   const mine=reqCourses(s);
@@ -324,11 +324,12 @@ function renderList(){
     <div class="meta"><span>${c.minutes} min · ${c.slides?c.slides+" slides":"slides not uploaded yet"} · ${c.qs.length}-question test</span><span>${due}</span>${r.attempts.length&&!r.cert?`<span>Attempts ${r.attempts.length} of ${MAX_ATTEMPTS}</span>`:""}${r.cert?`<span>Score ${r.cert.score}%</span>`:""}</div></div>
     <div>${action}</div></div>`}).join("");
   app.innerHTML=`<div class="section-head"><div><h1>My trainings</h1><p class="muted small" style="margin:4px 0 0">${esc(s.name)} · ${esc(s.role)} · Hired ${fmt(s.hire)} · ${mine.length} required training${mine.length===1?"":"s"} for this role</p></div>
-  <div><p class="small muted" style="margin:0">Orientation due within 15 business days of hire: <b class="mono">${fmt(iso(orient))}</b></p><p class="small" style="margin:6px 0 0"><button class="linkbtn" id="about">${esc(WELCOME_TITLE)}</button></p></div></div>
+  <div><p class="small muted" style="margin:0">Orientation due within 15 business days of hire: <b class="mono">${fmt(iso(orient))}</b></p></div></div>
+  ${welcomeBox()}
   <div class="list">${items}</div>`;
   app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>go({name:"course",cid:b.dataset.open}));
   app.querySelectorAll("[data-sign]").forEach(b=>b.onclick=()=>go({name:"sign",cid:b.dataset.sign}));
-  document.getElementById("about").onclick=()=>go({name:"welcome"});
+  wireWelcome();
   app.querySelectorAll("[data-cert]").forEach(b=>b.onclick=()=>go({name:"cert",cid:b.dataset.cert,sid:who}));
 }
 
