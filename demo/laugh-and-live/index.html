@@ -296,22 +296,7 @@ function render(){
 }
 
 const WELCOME_COUNT=14, WELCOME_TITLE="About Laugh & Live, LLC";
-function welcomeBox(){
-  const first=!(S.welcomed||{})[who], n=view.wi||0, last=n===WELCOME_COUNT-1;
-  const open=first||view.wopen;
-  return `<details class="wbox" id="wbox" ${open?"open":""}><summary><b>${first?"Welcome! ":""}${esc(WELCOME_TITLE)}</b> <span class="small muted">${WELCOME_COUNT} slides</span></summary>
-   ${first?`<p class="small muted" style="margin:4px 0 0">Before your trainings, take a few minutes to get to know us.</p>`:""}
-   <div style="background:var(--screen);border-radius:10px;overflow:hidden;aspect-ratio:16/9;margin:10px 0"><img src="slides/welcome-${String(n+1).padStart(2,"0")}.jpg" alt="Slide ${n+1} of ${WELCOME_COUNT}" style="width:100%;height:100%;object-fit:contain;display:block"></div>
-   <div class="row"><button class="btn" id="wprev" ${n===0?"disabled":""}>← Back</button><button class="btn primary" id="wnext" ${last?"disabled":""}>Next →</button><span class="small muted">${n+1} of ${WELCOME_COUNT}</span>
-   ${first?`<button class="btn${last?" primary":""}" id="wdone" style="margin-left:auto">Done</button>`:""}</div></details>`;
-}
-function wireWelcome(){
-  const box=document.getElementById("wbox");if(!box)return;
-  box.addEventListener("toggle",()=>{view.wopen=box.open});
-  document.getElementById("wprev").onclick=()=>{view.wi=(view.wi||0)-1;view.wopen=true;render()};
-  document.getElementById("wnext").onclick=()=>{view.wi=(view.wi||0)+1;view.wopen=true;render()};
-  const d=document.getElementById("wdone");if(d)d.onclick=()=>{S.welcomed=S.welcomed||{};S.welcomed[who]=true;view.wi=0;view.wopen=false;save();render()};
-}
+const ABOUT={id:"welcome",deck:"welcome",title:"About Laugh & Live, LLC",short:"About us",slides:WELCOME_COUNT,minutes:WELCOME_COUNT,about:true,nar:["Welcome to Laugh and Live! Before you start your trainings, take a few minutes to get to know who we are and what we do. Laugh and Live is a provider of services for people with developmental disabilities.", "At Laugh and Live, we believe in the power of laughter. Our aim is to bring happiness, one smile at a time.", "We provide personalized support for people with developmental disabilities in their own homes, built around each person's physical, medical, and emotional needs. We accept the FIS and CL waivers, and our services help with daily living, medication monitoring, medical appointments, community involvement, building relationships, and much more.", "Our vision is communities where every person is respected, valued, included, and empowered to reach their full potential. Our purpose is changing lives one smile at a time. First you smile, then you laugh, and when you laugh, you begin to live.", "Our philosophy: we take pride in providing protection, guidance, and supervision to the people we serve. To do that well, we practice integrity, respect, leadership, personal growth, and excellence in everything we do.", "We serve adults with developmental and intellectual disabilities through three services: Supportive In-Home, Independent Living, and Sponsored Residential. In all of them, our focus is each person's health, safety, and well-being.", "Supportive In-Home services take place in the person's own home, their family's home, or out in the community. They add to the care the person and their family already provide.", "Independent Living supports are for adults 18 and older. They focus on building the skills and supports a person needs to get and keep their own home in the community.", "Sponsored Residential services take place in the home of a family or sponsor. They include skill-building, daily routines, and the support a person needs to stay safe.", "Here are the goals we work toward with each person: building a routine, learning everyday and self-care skills, becoming more independent, connecting with others, using community resources, and communicating effectively.", "We also help the people we serve with paperwork, including Medicaid and Social Security applications and renewals, reviewing mail, Handi Ride applications, discounted bus tickets, volunteer opportunities, connecting with DARS, and finding local resources.", "Meet our leadership team. LaWanda Jones is a co-owner and our Program Director. Elizabeth Lewis, who goes by Liz, is a partner and our Executive Director. Together they lead a team dedicated to bringing joy to the people we serve.", "Here's how to reach us. Our phone number is 757-224-0507, and our email is laughandlivellc@gmail.com. Our office is at 1919 Commerce Drive, Suite 450, in Hampton, Virginia.", "Thank you, and welcome to the team! When you're ready, head back to My trainings to start your required courses."]};
 function renderList(){
   const s=S.staff.find(x=>x.id===who);
   const orient=addBiz(new Date(s.hire+"T00:00:00"),15);
@@ -323,13 +308,16 @@ function renderList(){
     return `<div class="course">${thumb(c,"thumb")}<div><div class="row" style="gap:8px 12px"><h3>${esc(c.title)}</h3><span class="chip ${st.cls}">${st.k}</span></div>
     <div class="meta"><span>${c.minutes} min · ${c.slides?c.slides+" slides":"slides not uploaded yet"} · ${c.qs.length}-question test</span><span>${due}</span>${r.attempts.length&&!r.cert?`<span>Attempts ${r.attempts.length} of ${MAX_ATTEMPTS}</span>`:""}${r.cert?`<span>Score ${r.cert.score}%</span>`:""}</div></div>
     <div>${action}</div></div>`}).join("");
+  const seen=!!(S.welcomed||{})[who];
+  const aboutRow=`<div class="course">${thumb(ABOUT,"thumb")}<div><div class="row" style="gap:8px 12px"><h3>${esc(ABOUT.title)}</h3><span class="chip ${seen?"c-good":"c-idle"}">${seen?"Viewed":"New"}</span></div>
+    <div class="meta"><span>${ABOUT.slides} slides · Getting to know us · No test</span></div></div>
+    <div><button class="btn${seen?"":" primary"}" data-open="welcome">${seen?"View again":"Start"}</button></div></div>`;
   app.innerHTML=`<div class="section-head"><div><h1>My trainings</h1><p class="muted small" style="margin:4px 0 0">${esc(s.name)} · ${esc(s.role)} · Hired ${fmt(s.hire)} · ${mine.length} required training${mine.length===1?"":"s"} for this role</p></div>
   <div><p class="small muted" style="margin:0">Orientation due within 15 business days of hire: <b class="mono">${fmt(iso(orient))}</b></p></div></div>
-  ${welcomeBox()}
-  <div class="list">${items}</div>`;
+  <div class="list">${aboutRow}${items}</div>`;
   app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>go({name:"course",cid:b.dataset.open}));
   app.querySelectorAll("[data-sign]").forEach(b=>b.onclick=()=>go({name:"sign",cid:b.dataset.sign}));
-  wireWelcome();
+
   app.querySelectorAll("[data-cert]").forEach(b=>b.onclick=()=>go({name:"cert",cid:b.dataset.cert,sid:who}));
 }
 
@@ -383,7 +371,7 @@ function speakText(text){stopSpeech();if(!soundOn||!text||!canSpeak)return;const
 if(canSpeak&&speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=()=>fillVoices(document.getElementById("voicepick"));
 
 function renderCourse(){
-  const c=COURSES.find(x=>x.id===view.cid), r=S.rec[who+"|"+c.id];
+  const c=view.cid==="welcome"?ABOUT:COURSES.find(x=>x.id===view.cid), r=c.about?{watched:c.minutes}:S.rec[who+"|"+c.id];
   if(view.pos==null)view.pos=Math.min(r.watched,c.minutes)>=c.minutes?0:Math.min(r.watched,c.minutes);
   let playing=false;
   app.innerHTML=`<button class="btn back" id="back">← My trainings</button>
@@ -393,9 +381,10 @@ function renderCourse(){
     <div class="track" id="track" role="slider" aria-label="Lesson position" tabindex="0"><div class="seen" id="seen"></div><div class="pos" id="pos"></div></div>
     <span class="t" id="time"></span></div></div>
   ${canSpeak&&c.nar&&c.nar.some(Boolean)?`<label class="voice small muted" hidden>Voice <select id="voicepick"></select></label>`:""}
-  <div class="watch"><div class="stat"><span>Time completed</span><b id="w"></b></div><div class="stat"><span>Required</span><b>${mmss(c.minutes)}</b></div><div class="stat"><span>Test</span><b id="lock"></b></div></div>
+  ${c.about?`<div class="panel"><div class="row" style="justify-content:space-between"><p class="small muted" style="margin:0;max-width:56ch">Go at your own pace. There's no time requirement and no test.</p><button class="btn primary" id="done">Done</button></div></div>`:""}
+  <div ${c.about?"hidden":""}><div class="watch"><div class="stat"><span>Time completed</span><b id="w"></b></div><div class="stat"><span>Required</span><b>${mmss(c.minutes)}</b></div><div class="stat"><span>Test</span><b id="lock"></b></div></div>
   <div class="panel"><div class="row" style="justify-content:space-between"><p class="small muted" style="margin:0;max-width:56ch">Time only counts while the lesson plays on this screen. Switching tabs pauses it. You can go back, but you can't skip ahead of what you've completed.</p>
-  <div class="row"><button class="btn demo" id="skip">Skip to end (demo only)</button><button class="btn primary" id="take" disabled>Take the test</button></div></div></div>`;
+  <div class="row"><button class="btn demo" id="skip">Skip to end (demo only)</button><button class="btn primary" id="take" disabled>Take the test</button></div></div></div></div>`;
   const $=id=>document.getElementById(id);
   // preload slides
   for(let i=0;i<c.slides;i++){const im=new Image();im.src=slideSrc(c,i)}
@@ -417,7 +406,7 @@ function renderCourse(){
     if(speaking&&c.slides&&nextSlide!==shown&&view.pos+0.25<c.minutes)return;
     view.pos=Math.min(c.minutes,view.pos+0.25);
     if(view.pos>r.watched)r.watched=view.pos;
-    if(view.pos>=c.minutes){playing=false;stopTimer();toast("Lesson complete. The test is unlocked.")}
+    if(view.pos>=c.minutes){playing=false;stopTimer();if(!c.about)toast("Lesson complete. The test is unlocked.")}
     save();paint();}
   $("play").onclick=()=>{playing=!playing;if(playing){if(view.pos>=c.minutes)view.pos=0;timer=timer||setInterval(tick,250);paint();if(c.slides)speakText(c.nar&&c.nar[shown])}else{stopTimer();stopSpeech();paint()}};
   const vp=$("voicepick");fillVoices(vp);if(vp)vp.onchange=()=>{voiceName=vp.value;try{localStorage.setItem("ll-voice",voiceName)}catch(e){}speakText(c.nar&&c.nar[Math.max(shown,0)])};
@@ -428,6 +417,7 @@ function renderCourse(){
     view.pos=Math.max(0,want);paint();if(playing)speakText(c.nar&&c.nar[shown])};
   $("skip").onclick=()=>{playing=false;stopTimer();stopSpeech();r.watched=c.minutes;view.pos=c.minutes-0.01;save();paint();toast("Demo: lesson marked complete. The test is unlocked.")};
   $("back").onclick=()=>go({name:"list"});
+  if(c.about)$("done").onclick=()=>{stopTimer();stopSpeech();S.welcomed=S.welcomed||{};S.welcomed[who]=true;save();go({name:"list"})};
   $("take").onclick=()=>go({name:"quiz",cid:c.id});
   document.onvisibilitychange=()=>{if(document.hidden&&playing){playing=false;stopTimer();stopSpeech();paint()}};
   paint();
